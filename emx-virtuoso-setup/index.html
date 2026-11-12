@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadence Virtuoso EMX Integration & Simulation Guide (gpdk045)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            eda: {
+              dark: '#0f172a',
+              panel: '#1e293b',
+              terminal: '#161821',
+              termBar: '#222533',
+              accent: '#4f46e5',
+              cyan: '#0284c7',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Scrollbars & Terminal Styling */
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Authentic Linux GNOME Terminal Frame */
+    .linux-terminal {
+      background-color: #161821;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.35);
+      overflow: hidden;
+    }
+
+    .linux-terminal-header {
+      background: linear-gradient(180deg, #2b2f40 0%, #202330 100%);
+      border-bottom: 1px solid #334155;
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Classic Motif / Virtuoso Dialog Styling for Step 6 Simulator */
+    .virtuoso-dialog {
+      background-color: #e5e7eb;
+      border: 2px solid #9ca3af;
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.55);
+      color: #111827;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .virtuoso-btn {
+      background: linear-gradient(180deg, #f9fafb 0%, #d1d5db 100%);
+      border: 1px solid #6b7280;
+      border-radius: 9999px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #111827;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(0, 0, 0, 0.12);
+      transition: all 0.12s ease;
+      cursor: pointer;
+    }
+
+    .virtuoso-btn:hover {
+      background: linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%);
+      border-color: #4f46e5;
+    }
+
+    .virtuoso-btn:active {
+      background: #cbd5e1;
+      transform: translateY(0.5px);
+    }
+
+    .virtuoso-btn-active {
+      background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 100%);
+      border-color: #1d4ed8;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+
+    .virtuoso-input {
+      background-color: #ffffff;
+      border: 1px solid #9ca3af;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #111827;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .virtuoso-row-hover {
+      transition: background-color 0.15s ease;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+
+    .virtuoso-row-hover:hover {
+      background-color: rgba(79, 70, 229, 0.08);
+    }
+
+    .virtuoso-row-selected {
+      background-color: rgba(79, 70, 229, 0.14);
+      outline: 1px solid rgba(79, 70, 229, 0.45);
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+
+    /* Presentation Mode Transitions */
+    .slide-fade-in {
+      animation: slideFade 0.25s ease-out;
+    }
+
+    @keyframes slideFade {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Dedicated Print / PDF Styles */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 14mm 12mm;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 10.5pt !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .print-only {
+        display: block !important;
+      }
+
+      /* Reveal all tutorial sections sequentially for multi-page PDF export */
+      .tutorial-step-section {
+        display: block !important;
+        opacity: 1 !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 22px !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+      }
+
+      #presentation-container {
+        display: none !important;
+      }
+
+      #tutorial-container {
+        display: block !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+
+      #main-content-column {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .linux-terminal {
+        background-color: #161821 !important;
+        color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .virtuoso-dialog {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Toast Notification Banner (Replaces alert() cleanly) -->
+  <div id="toast-banner" class="no-print fixed bottom-5 right-5 z-50 hidden transform transition-all duration-200">
+    <div class="bg-slate-900 text-white border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium">
+      <span id="toast-icon" class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+      <span id="toast-text">Copied to clipboard</span>
+    </div>
+  </div>
+
+  <!-- Print-Only Document Header -->
+  <div class="print-only hidden border-b-2 border-slate-800 pb-3 mb-6">
+    <div class="flex justify-between items-end">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-indigo-700">RFIC Design & EM Extraction Manual</p>
+        <h1 class="text-2xl font-extrabold text-slate-900">Cadence Virtuoso EMX Integration & Simulation Guide (gpdk045)</h1>
+      </div>
+      <div class="text-right text-xs text-slate-600 font-mono">
+        <p>Tool: Cadence EMX 25.10.000</p>
+        <p>PDK: gpdk045_v_6_0 (Nominal)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation & Mode Switcher Header -->
+  <header class="no-print sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand / Title -->
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" aria-label="Toggle Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-md shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-bold tracking-tight text-white">Cadence Virtuoso EMX Integration & Simulation Guide</h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">gpdk045</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">EMX 25.10.000 Virtuoso Studio Setup, SKILL Configuration & 3D Planar EM Extraction</p>
+        </div>
+      </div>
+
+      <!-- Mode Controls -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center">
+          <button id="btn-mode-tutorial" onclick="setViewMode('tutorial')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow">
+            Interactive Tutorial
+          </button>
+          <button id="btn-mode-slides" onclick="setViewMode('slides')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white">
+            Presentation (Slides)
+          </button>
+        </div>
+
+        <button onclick="printManual()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>Print / Save PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== VIEW 1: INTERACTIVE TUTORIAL MODE ==================== -->
+  <div id="tutorial-container" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
+
+      <!-- Left Sticky Navigation Sidebar -->
+      <aside id="tutorial-sidebar" class="no-print hidden lg:block w-full lg:w-72 shrink-0 lg:sticky lg:top-20 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Workflow Modules</span>
+            <span id="sidebar-progress-badge" class="text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">0 / 6 Done</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4">
+            <div id="sidebar-progress-bar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+
+          <!-- Step Links -->
+          <nav class="space-y-1.5" id="sidebar-nav-list">
+            <button onclick="scrollToStep(1)" data-step-btn="1" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-indigo-600 text-white font-mono text-[11px] flex items-center justify-center font-bold">1</span>
+                <span>Locate EMX & C-Shell</span>
+              </span>
+              <span id="step-check-1" class="text-slate-300 font-bold">○</span>
+            </button>
+
+            <button onclick="scrollToStep(2)" data-step-btn="2" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold">2</span>
+                <span>Inspect emxconfig.il</span>
+              </span>
+              <span id="step-check-2" class="text-slate-300 font-bold">○</span>
+            </button>
+
+            <button onclick="scrollToStep(3)" data-step-btn="3" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold">3</span>
+                <span>Check .cdsinit & Env</span>
+              </span>
+              <span id="step-check-3" class="text-slate-300 font-bold">○</span>
+            </button>
+
+            <button onclick="scrollToStep(4)" data-step-btn="4" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold">4</span>
+                <span>Configure .cdsinit & PDK</span>
+              </span>
+              <span id="step-check-4" class="text-slate-300 font-bold">○</span>
+            </button>
+
+            <button onclick="scrollToStep(5)" data-step-btn="5" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold">5</span>
+                <span>Launch Virtuoso & Menu</span>
+              </span>
+              <span id="step-check-5" class="text-slate-300 font-bold">○</span>
+            </button>
+
+            <button onclick="scrollToStep(6)" data-step-btn="6" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold">6</span>
+                <span>EMX Simulation GUI</span>
+              </span>
+              <span id="step-check-6" class="text-slate-300 font-bold">○</span>
+            </button>
+          </nav>
+
+          <!-- Filter View Toggle -->
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="text-slate-500">Display Mode:</span>
+            <button id="toggle-all-steps-btn" onclick="toggleShowAllSteps()" class="font-semibold text-indigo-600 hover:text-indigo-800">
+              Showing All Steps
+            </button>
+          </div>
+        </div>
+
+        <!-- Environment Path Reference Card -->
+        <div class="bg-slate-900 text-slate-200 rounded-2xl p-4 border border-slate-800 shadow-sm text-xs space-y-2.5">
+          <div class="flex items-center gap-2 font-semibold text-cyan-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Sanitized Reference Paths</span>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-400">Working Directory</p>
+            <p class="font-mono text-[11px] text-slate-100 break-all">&lt;PROJECT_DIR&gt;/myProjects</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-400">EMX Installation ($EMXHOME)</p>
+            <p class="font-mono text-[11px] text-slate-100 break-all">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-400">PDK Nominal Process File</p>
+            <p class="font-mono text-[11px] text-emerald-300 break-all">&lt;PDK_DIR&gt;/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Column -->
+      <main id="main-content-column" class="flex-1 min-w-0 space-y-8">
+
+        <!-- ==================== STEP 1 ==================== -->
+        <section id="step-1" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">01</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Locate EMX &amp; Verify Shell Environment (C-Shell)</h2>
+                <p class="text-xs text-slate-500">Confirm binary availability in PATH and locate the Virtuoso SKILL configuration file</p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(1)" id="mark-done-btn-1" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-5">
+            <p class="text-sm text-slate-700 leading-relaxed">
+              Before modifying any Cadence startup files, verify that the EMX executable is already exposed in your active EDA environment and locate <code class="px-1.5 py-0.5 bg-slate-100 rounded text-indigo-700 font-semibold">emxconfig.il</code> inside the installation tree.
+            </p>
+
+            <!-- Sanitized GNOME Terminal Replica -->
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-400/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                </div>
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+                <button onclick="copyText('which emx\nfind $EMXHOME -name &quot;emxconfig.il&quot;')" class="no-print text-[11px] font-mono px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
+                  Copy Commands
+                </button>
+              </div>
+              <div class="p-4 font-mono text-xs sm:text-[13px] leading-relaxed overflow-x-auto space-y-1">
+                <div class="text-slate-400">bash-4.4$ csh</div>
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">which emx</span></div>
+                <div class="text-cyan-300">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/bin/emx</div>
+                <div class="pt-1"><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">find $EMXHOME -name "emxconfig.il"</span></div>
+                <div class="text-cyan-300">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il</div>
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="inline-block w-2 h-4 bg-slate-200 align-middle"></span></div>
+              </div>
+            </div>
+
+            <!-- Key Engineering Notes -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5">
+                <div class="flex items-center gap-2 text-amber-900 font-semibold text-xs">
+                  <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>C-Shell (csh/tcsh) Redirection Gotcha</span>
+                </div>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                  In <code class="font-mono bg-amber-100 px-1 rounded">csh</code> or <code class="font-mono bg-amber-100 px-1 rounded">tcsh</code>, Bash syntax like <code class="font-mono bg-amber-100 px-1 rounded">2&gt;/dev/null</code> is invalid. Running <code class="font-mono">find ... 2&gt;/dev/null</code> causes <code class="font-mono">find: paths must precede expression: 2</code>. Run <code class="font-mono font-semibold">find $EMXHOME -name "emxconfig.il"</code> directly.
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5">
+                <div class="flex items-center gap-2 text-indigo-900 font-semibold text-xs">
+                  <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Entry Script Name: emxconfig.il</span>
+                </div>
+                <p class="text-xs text-indigo-800 leading-relaxed">
+                  Cadence EMX 25.10 registers its Virtuoso Layout menu through <code class="font-mono bg-indigo-100 px-1 rounded">emxconfig.il</code> (not <code class="font-mono bg-indigo-100 px-1 rounded">emx.il</code>), located under <code class="font-mono">share/emx/virtuoso_ui/emxinterface/emxskill/</code>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 2 ==================== -->
+        <section id="step-2" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">02</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Inspect <code class="font-mono text-indigo-600">emxconfig.il</code> Auto-Configuration</h2>
+                <p class="text-xs text-slate-500">Verify how the SKILL wrapper resolves <code class="font-mono">EMX_interface_path</code> from <code class="font-mono">$EMXHOME</code></p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(2)" id="mark-done-btn-2" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-5">
+            <p class="text-sm text-slate-700 leading-relaxed">
+              Inspecting the header of <code class="px-1.5 py-0.5 bg-slate-100 rounded font-mono text-xs">emxconfig.il</code> reveals whether site paths are hard-coded or resolved dynamically from your environment variables at Virtuoso startup.
+            </p>
+
+            <!-- Terminal Output of head -n 40 -->
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-400/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                </div>
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+                <button onclick="copyText('head -n 40 $EMXHOME/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il')" class="no-print text-[11px] font-mono px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
+                  Copy Command
+                </button>
+              </div>
+              <div class="p-4 font-mono text-xs leading-relaxed overflow-x-auto space-y-1">
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">head -n 40 &lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il</span></div>
+                <div class="text-slate-400">;; ==== EMX Virtuoso interface configuration file ====</div>
+                <div class="text-slate-400">; The variable EMX_interface_path is the one thing that must</div>
+                <div class="text-slate-400">; absolutely be set. It tells where you've installed the interface.</div>
+                <div class="text-slate-400">; The main SKILL code for the interface is in emxform.ils within that same</div>
+                <div class="text-slate-400">; directory. The emxform.ils file is loaded at the end of emxconfig.il.</div>
+                <div class="bg-indigo-950/80 border-l-2 border-cyan-400 pl-3 py-1 my-1 rounded-r">
+                  <div class="text-amber-300">(if (getShellEnvVar "EMXHOME")</div>
+                  <div class="text-cyan-300 pl-4">EMX_interface_path=(sprintf nil "%s/share/emx/virtuoso_ui/emxinterface"</div>
+                  <div class="text-cyan-300 pl-16">(getShellEnvVar "EMXHOME"))</div>
+                  <div class="text-rose-300 pl-2">EMX_interface_path=(pwd))</div>
+                </div>
+                <div class="text-slate-400">; Variables that are marked as *AC* are set automatically according to</div>
+                <div class="text-slate-400">; the installed version of EMX and ModelGen.</div>
+                <div class="text-emerald-300 font-semibold">EMX_auto_config=t</div>
+              </div>
+            </div>
+
+            <!-- Code Callout Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">1. Dynamic <code class="font-mono text-indigo-600">EMXHOME</code> Lookup</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  <code class="font-mono text-slate-900">emxconfig.il</code> queries <code class="font-mono text-slate-900">(getShellEnvVar "EMXHOME")</code>. If <code class="font-mono">EMXHOME</code> is unset, it falls back to <code class="font-mono text-rose-600">(pwd)</code> (<code class="font-mono">myProjects</code>), which breaks loading <code class="font-mono">emxform.ils</code>.
+                </p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">2. Automatic Tool Binding (<code class="font-mono text-emerald-700">EMX_auto_config=t</code>)</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  With <code class="font-mono text-slate-900">EMX_auto_config=t</code> enabled, EMX automatically detects the installed <code class="font-mono">emx</code> solver, <code class="font-mono">modelgen</code>, and ParaView 3D viewer paths without manual edits to the installation directory.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 3 ==================== -->
+        <section id="step-3" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">03</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Check Existing <code class="font-mono text-indigo-600">.cdsinit</code> Precedence &amp; Env</h2>
+                <p class="text-xs text-slate-500">Ensure PDK startup scripts are preserved before creating a project-level <code class="font-mono">.cdsinit</code></p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(3)" id="mark-done-btn-3" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-5">
+            <!-- Terminal Verification -->
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-400/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                </div>
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+                <button onclick="copyText('ls -la .cdsinit ~/.cdsinit\nenv | grep -E &quot;EMX|CDS|PDK&quot;')" class="no-print text-[11px] font-mono px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
+                  Copy Commands
+                </button>
+              </div>
+              <div class="p-4 font-mono text-xs leading-relaxed overflow-x-auto space-y-1">
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">ls -la .cdsinit ~/.cdsinit</span></div>
+                <div class="text-slate-400">ls: cannot access '.cdsinit': No such file or directory</div>
+                <div class="text-slate-400">ls: cannot access '/home/designer/.cdsinit': No such file or directory</div>
+                <div class="pt-1"><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">env | grep -E "EMX|CDS|PDK"</span></div>
+                <div class="text-cyan-300">EMX_HOME=&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</div>
+                <div class="text-cyan-300">EMXHOME=&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</div>
+                <div class="text-slate-300">CDSHOME=&lt;CADENCE_DIR&gt;/IC/cur</div>
+                <div class="text-slate-300">CDS_LIC_FILE=&lt;PORT&gt;@&lt;LICENSE_SERVER&gt;</div>
+                <div class="text-slate-300">CDS_AUTO_64BIT=ALL</div>
+                <div class="text-slate-300">PARAVIEW_HOME=&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/ParaView-5.13.1-MPI-Linux-Python3.10-x86_64</div>
+              </div>
+            </div>
+
+            <!-- Virtuoso .cdsinit Precedence Diagram -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Virtuoso <code class="font-mono">.cdsinit</code> Loading Precedence Rule</h3>
+                <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Safe to Create ./.cdsinit</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="p-3 rounded-lg bg-white border border-slate-200">
+                  <span class="font-mono text-[11px] font-bold text-indigo-600">Tier 1 (Always First)</span>
+                  <p class="font-mono font-semibold text-slate-900 mt-0.5">$CDSHOME/tools/dfII/local/.cdsinit</p>
+                  <p class="text-slate-500 mt-1">Site-wide Cadence &amp; PDK menus load automatically.</p>
+                </div>
+                <div class="p-3 rounded-lg bg-white border border-slate-200">
+                  <span class="font-mono text-[11px] font-bold text-amber-600">Tier 2 (Home Fallback)</span>
+                  <p class="font-mono font-semibold text-slate-900 mt-0.5">~/.cdsinit</p>
+                  <p class="text-slate-500 mt-1">Loaded <strong>only if</strong> <code class="font-mono">./.cdsinit</code> does not exist in launch dir.</p>
+                </div>
+                <div class="p-3 rounded-lg bg-white border border-indigo-200 ring-1 ring-indigo-100">
+                  <span class="font-mono text-[11px] font-bold text-emerald-600">Tier 3 (Project Dir)</span>
+                  <p class="font-mono font-semibold text-slate-900 mt-0.5">&lt;PROJECT_DIR&gt;/myProjects/.cdsinit</p>
+                  <p class="text-slate-500 mt-1">Loaded when launching Virtuoso from <code class="font-mono">myProjects</code>.</p>
+                </div>
+              </div>
+              <p class="text-xs text-slate-600">
+                <strong>Important Best Practice:</strong> If <code class="font-mono bg-white px-1 border border-slate-200 rounded">~/.cdsinit</code> already exists on another workstation, add <code class="font-mono bg-white px-1 border border-slate-200 rounded">load("~/.cdsinit")</code> at the top of <code class="font-mono">./.cdsinit</code> so user keybinds and PDK callbacks are never shadowed.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 4 ==================== -->
+        <section id="step-4" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">04</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Configure <code class="font-mono text-indigo-600">.cdsinit</code> &amp; Default <code class="font-mono text-indigo-600">gpdk045</code> Stackup</h2>
+                <p class="text-xs text-slate-500">Bind both the EMX Virtuoso UI and the nominal <code class="font-mono">.proc</code> stackup file</p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(4)" id="mark-done-btn-4" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-6">
+            <p class="text-sm text-slate-700 leading-relaxed">
+              Create or edit <code class="px-1.5 py-0.5 bg-slate-100 rounded font-mono text-xs">&lt;PROJECT_DIR&gt;/myProjects/.cdsinit</code> using <code class="font-mono text-xs">gedit</code> or <code class="font-mono text-xs">nano</code>. Defining <code class="font-mono text-xs text-indigo-700">EMX_process_name</code> right after loading <code class="font-mono text-xs">emxconfig.il</code> pre-populates the <code class="font-mono text-xs">gpdk045</code> stackup automatically every time you open the EMX simulation dialog.
+            </p>
+
+            <!-- Verified Terminal Output -->
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-400/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                </div>
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+                <span class="text-[11px] font-mono text-emerald-400">Verified .cdsinit</span>
+              </div>
+              <div class="p-4 font-mono text-xs leading-relaxed overflow-x-auto space-y-1">
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">gedit &lt;PROJECT_DIR&gt;/myProjects/.cdsinit &amp;</span></div>
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">cat &lt;PROJECT_DIR&gt;/myProjects/.cdsinit</span></div>
+                <div class="text-slate-400 pt-1">; Load Cadence EMX Virtuoso Interface</div>
+                <div class="text-cyan-300">load("&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il")</div>
+                <div class="text-slate-400 pt-2">; Default gpdk045 Process Stackup File</div>
+                <div class="text-emerald-300">EMX_process_name = "&lt;PDK_DIR&gt;/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc"</div>
+              </div>
+            </div>
+
+            <!-- Interactive .cdsinit Generator Sandbox -->
+            <div class="no-print rounded-2xl bg-indigo-50/60 border border-indigo-200 p-4 sm:p-5 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    <span>Interactive <code class="font-mono">.cdsinit</code> Configuration Builder</span>
+                  </h3>
+                  <p class="text-xs text-slate-600">Customize paths or switch <code class="font-mono">gpdk045</code> process corners and copy ready-to-paste SKILL code</p>
+                </div>
+                <button onclick="copyGeneratedCdsinit()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                  <span>Copy .cdsinit Code</span>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">EMX Installation Root (<code class="font-mono">$EMXHOME</code>)</label>
+                  <input type="text" id="builder-emx-home" oninput="updateCdsinitBuilder()" value="<EMX_INSTALL_DIR>/EMX_25.10.000" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">PDK Process Corner Preset</label>
+                  <select id="builder-corner-preset" onchange="applyCornerPreset()" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="gpdk045_nominal.proc" selected>gpdk045_nominal.proc (Typical / Nominal)</option>
+                    <option value="gpdk045_rcmax.proc">gpdk045_rcmax.proc (Worst-Case Max RC)</option>
+                    <option value="gpdk045_rcmin.proc">gpdk045_rcmin.proc (Best-Case Min RC)</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Full Process File Path (<code class="font-mono">EMX_process_name</code>)</label>
+                  <input type="text" id="builder-proc-path" oninput="updateCdsinitBuilder()" value="<PDK_DIR>/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="builder-include-home" onchange="updateCdsinitBuilder()" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+                <label for="builder-include-home" class="text-xs text-slate-700">Include <code class="font-mono bg-white px-1 rounded border border-slate-200">when(isFile("~/.cdsinit") load("~/.cdsinit"))</code> guard at top</label>
+              </div>
+
+              <pre id="builder-output-preview" class="bg-slate-900 text-emerald-300 p-3.5 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 leading-relaxed"></pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 5 ==================== -->
+        <section id="step-5" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">05</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Launch Virtuoso &amp; Verify Menu Integration</h2>
+                <p class="text-xs text-slate-500">Confirm CIW SKILL loading and verify the EMX menu in Virtuoso Studio Layout</p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(5)" id="mark-done-btn-5" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <span class="inline-block px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-[11px] font-bold">Action A: Fresh Launch</span>
+                <p class="text-xs text-slate-700 leading-relaxed">
+                  From <code class="font-mono bg-white px-1 rounded border border-slate-200">&lt;PROJECT_DIR&gt;/myProjects</code>, start Virtuoso in the background:
+                </p>
+                <div class="bg-slate-900 text-cyan-300 font-mono text-xs px-3 py-2 rounded-lg flex items-center justify-between">
+                  <span>virtuoso &amp;</span>
+                  <button onclick="copyText('virtuoso &')" class="no-print text-[10px] bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded">Copy</button>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <span class="inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[11px] font-bold">Action B: Live CIW Reload</span>
+                <p class="text-xs text-slate-700 leading-relaxed">
+                  If Virtuoso is already open, type this in the <strong>CIW</strong> input bar without restarting:
+                </p>
+                <div class="bg-slate-900 text-emerald-300 font-mono text-[11px] px-3 py-2 rounded-lg flex items-center justify-between gap-2">
+                  <span class="truncate">load("./.cdsinit")</span>
+                  <button onclick="copyText('load(&quot;./.cdsinit&quot;)')" class="no-print text-[10px] bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded shrink-0">Copy</button>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <span class="inline-block px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold">Action C: Layout Verification</span>
+                <p class="text-xs text-slate-700 leading-relaxed">
+                  Open any layout cellview (e.g., <code class="font-mono">LNA_Tutorial / Step4_Schematic_Full / layout</code>) and verify the <strong>EMX</strong> top menu bar entry.
+                </p>
+              </div>
+            </div>
+
+            <!-- Simulated Virtuoso Menu Bar & CIW Status Strip -->
+            <div class="rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+              <div class="bg-slate-200 px-3 py-1.5 text-[11px] font-semibold text-slate-700 border-b border-slate-300 flex items-center justify-between">
+                <span>Virtuoso Studio Layout Suite — Verified Top Menu Bar</span>
+                <span class="font-mono text-slate-500">gpdk045</span>
+              </div>
+              <div class="bg-slate-100 px-3 py-2 flex flex-wrap items-center gap-2 text-xs text-slate-700 border-b border-slate-300 font-medium">
+                <span>Launch</span>
+                <span>File</span>
+                <span>Edit</span>
+                <span>View</span>
+                <span>Create</span>
+                <span>Verify</span>
+                <span>Connectivity</span>
+                <span>Options</span>
+                <span>Tools</span>
+                <span>Window</span>
+                <span>Floorplan</span>
+                <span>Place</span>
+                <span>Route</span>
+                <span>Concurrent</span>
+                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold shadow-sm ring-2 ring-indigo-300">EMX</span>
+                <span>Help</span>
+              </div>
+              <div class="bg-white px-3 py-2 font-mono text-[11px] text-slate-600 flex items-center justify-between">
+                <span>CIW &gt; <span class="text-emerald-700 font-semibold">M: show_EMX_gui(nil nil)</span> — Loaded emxconfig.il &amp; gpdk045_nominal.proc cleanly</span>
+                <span class="text-emerald-600 font-bold">READY</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 6: INTERACTIVE EMX GUI SIMULATOR ==================== -->
+        <section id="step-6" class="tutorial-step-section bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm">06</span>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Interactive Virtuoso EMX Simulation GUI &amp; Workflow</h2>
+                <p class="text-xs text-slate-500">Click any parameter or button in the EMX dialog below to inspect settings, view stackup cross-sections, or simulate S-parameters</p>
+              </div>
+            </div>
+            <button onclick="toggleStepDone(6)" id="mark-done-btn-6" class="no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+              Mark Step Complete
+            </button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-6">
+            <!-- Interactive Workspace: Left = Virtuoso Layout + EMX Dialog | Right = Inspector / Stackup / Plotter -->
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+              <!-- LEFT 7 COLS: Authentic Virtuoso Studio Layout + EMX Dialog Replica -->
+              <div class="xl:col-span-7 rounded-2xl bg-slate-950 border border-slate-800 p-3 sm:p-4 shadow-xl relative overflow-hidden">
+                <!-- Virtuoso Top Bar Simulation -->
+                <div class="flex items-center justify-between text-[11px] text-slate-300 pb-2 mb-3 border-b border-slate-800">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold">Virtuoso Layout</span>
+                    <span class="font-mono text-slate-400">LNA_Tutorial / Step4_Schematic_Full / layout</span>
+                  </div>
+                  <span class="font-mono text-cyan-400">gpdk045</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+                  <!-- Mini Virtuoso Layers Palette (Matches Screenshot 6) -->
+                  <div class="hidden sm:flex flex-col w-28 shrink-0 bg-slate-900 border border-slate-700 rounded-lg p-2 text-[10px] font-mono text-slate-300 select-none">
+                    <div class="text-slate-400 font-bold pb-1 mb-1 border-b border-slate-700 flex justify-between">
+                      <span>Layers</span>
+                      <span class="text-cyan-400">AV</span>
+                    </div>
+                    <div class="space-y-1 overflow-y-auto max-h-[540px]">
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-700 border border-emerald-400 inline-block"></span><span>Nwell</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-amber-700 border border-amber-400 inline-block"></span><span>Oxide</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-green-600 border border-green-300 inline-block"></span><span>Poly</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-slate-300 border border-white inline-block"></span><span>Cont</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-blue-600 border border-blue-300 inline-block"></span><span>Metal1</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-yellow-500 border border-yellow-200 inline-block"></span><span>Via1</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-red-600 border border-red-300 inline-block"></span><span>Metal2</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-purple-600 border border-purple-300 inline-block"></span><span>Metal3</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-cyan-600 border border-cyan-300 inline-block"></span><span>Metal4</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-amber-500 border border-amber-200 inline-block"></span><span>Metal5</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-pink-600 border border-pink-300 inline-block"></span><span>Metal6</span></div>
+                      <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-teal-500 border border-teal-200 inline-block"></span><span>Metal7</span></div>
+                    </div>
+                  </div>
+
+                  <!-- EMX Floating Dialog Window (Exact Field Structure from Screenshot 6) -->
+                  <div class="flex-1 virtuoso-dialog rounded-lg overflow-hidden">
+                    <!-- Dialog Title Bar -->
+                    <div class="bg-gradient-to-r from-slate-300 via-slate-200 to-slate-300 px-3 py-1.5 border-b border-gray-400 flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900">EMX (LNA_Tutorial/Step4_Schematic_Full)</span>
+                      <span class="text-[10px] font-mono text-slate-600">EMX 25.10.000</span>
+                    </div>
+
+                    <!-- Dialog Body -->
+                    <div class="p-2.5 space-y-1.5 text-[11px]">
+
+                      <!-- Process -->
+                      <div onclick="inspectEmxField('process')" data-emx-row="process" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Process</span>
+                        <input type="text" readonly value="...l_Data/gpdk045_proc/gpdk045_nominal.proc" title="<PDK_DIR>/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc" class="col-span-8 virtuoso-input cursor-pointer" />
+                      </div>
+
+                      <!-- Options -->
+                      <div onclick="inspectEmxField('options')" data-emx-row="options" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Options</span>
+                        <input type="text" id="emx-gui-options" placeholder="(optional flags, e.g. --verbose=3)" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- X-section -->
+                      <div onclick="inspectEmxField('xsection')" data-emx-row="xsection" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">X-section</span>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                          <button type="button" onclick="event.stopPropagation(); openStackupViewer('scaled')" class="virtuoso-btn">Scaled</button>
+                          <button type="button" onclick="event.stopPropagation(); openStackupViewer('unscaled')" class="virtuoso-btn">Unscaled</button>
+                        </div>
+                      </div>
+
+                      <!-- Black boxing -->
+                      <div onclick="inspectEmxField('blackbox')" data-emx-row="blackbox" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Black boxing</span>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('blackbox'); showToast('Black-boxing selector opened (active devices excluded from EM mesh)')" class="virtuoso-btn">Choose</button>
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('blackbox'); showToast('Pin report generated: 2 passive inductor ports (P1, P2) verified')" class="virtuoso-btn">Pin report</button>
+                        </div>
+                      </div>
+
+                      <!-- Layout view -->
+                      <div onclick="inspectEmxField('layoutview')" data-emx-row="layoutview" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Layout view</span>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('layoutview'); showToast('Layout view switched to EMX geometry')" class="virtuoso-btn">EMX</button>
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('layoutview'); showToast('Layout view switched to Derived Masks')" class="virtuoso-btn">Masks</button>
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('layoutview'); showToast('Layout view switched to Raw GDS/OA')" class="virtuoso-btn">Raw</button>
+                        </div>
+                      </div>
+
+                      <hr class="border-gray-300 my-1" />
+
+                      <!-- Edge mesh -->
+                      <div onclick="inspectEmxField('edgemesh')" data-emx-row="edgemesh" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Edge mesh</span>
+                        <input type="text" value="1" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- Thickness -->
+                      <div onclick="inspectEmxField('thickness')" data-emx-row="thickness" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Thickness</span>
+                        <input type="text" value="1" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- Via merge -->
+                      <div onclick="inspectEmxField('viamerge')" data-emx-row="viamerge" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Via merge</span>
+                        <input type="text" value="0.5" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- 3D metals -->
+                      <div onclick="inspectEmxField('metals3d')" data-emx-row="metals3d" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">3D metals</span>
+                        <input type="text" value="*" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- Surface metals -->
+                      <div onclick="inspectEmxField('surfacemetals')" data-emx-row="surfacemetals" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Surface metals</span>
+                        <input type="text" value="" placeholder="(none — all metals modeled in 3D)" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <hr class="border-gray-300 my-1" />
+
+                      <!-- Signals -->
+                      <div onclick="inspectEmxField('signals')" data-emx-row="signals" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Signals</span>
+                        <input type="text" value="P1 P2" class="col-span-8 virtuoso-input font-semibold text-indigo-800" />
+                      </div>
+
+                      <!-- Grounds -->
+                      <div onclick="inspectEmxField('grounds')" data-emx-row="grounds" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Grounds</span>
+                        <input type="text" value="" placeholder="(e.g. VSS GND or leave blank with Global ref)" class="col-span-8 virtuoso-input" />
+                      </div>
+
+                      <!-- Global ref -->
+                      <div onclick="inspectEmxField('globalref')" data-emx-row="globalref" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Global ref</span>
+                        <div class="col-span-8 flex items-center gap-2">
+                          <input type="checkbox" id="emx-global-ref" onclick="event.stopPropagation(); inspectEmxField('globalref')" class="w-3.5 h-3.5" />
+                          <span class="text-[10px] text-gray-600">(Reference ports to substrate/infinity when unchecked/checked)</span>
+                        </div>
+                      </div>
+
+                      <hr class="border-gray-300 my-1" />
+
+                      <!-- Frequency Sweep -->
+                      <div onclick="inspectEmxField('freq')" data-emx-row="freq" class="virtuoso-row-hover space-y-1 cursor-pointer">
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Start freq</span>
+                          <input type="text" value="1e+08" class="col-span-8 virtuoso-input" />
+                        </div>
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Stop</span>
+                          <input type="text" value="2e+10" class="col-span-8 virtuoso-input" />
+                        </div>
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Step</span>
+                          <input type="text" value="1e+08" class="col-span-8 virtuoso-input" />
+                        </div>
+                      </div>
+
+                      <!-- Advanced Options Bar -->
+                      <div class="pt-0.5">
+                        <button type="button" onclick="inspectEmxField('advanced')" class="w-full virtuoso-btn py-1 font-semibold">Advanced options</button>
+                      </div>
+
+                      <!-- Simulation Row -->
+                      <div onclick="inspectEmxField('simulation')" data-emx-row="simulation" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer pt-0.5">
+                        <span class="col-span-4 font-bold text-gray-900">Simulation</span>
+                        <div class="col-span-8 flex flex-wrap items-center gap-1">
+                          <button type="button" onclick="event.stopPropagation(); runEmxSimulation()" class="virtuoso-btn virtuoso-btn-active">Start</button>
+                          <button type="button" onclick="event.stopPropagation(); showToast('EMX Solver Status: Ready / Completed (200 freq points)')" class="virtuoso-btn">Status</button>
+                          <button type="button" onclick="event.stopPropagation(); showToast('No active solver job to stop')" class="virtuoso-btn">Stop</button>
+                          <button type="button" onclick="event.stopPropagation(); showToast('Solver log window closed')" class="virtuoso-btn">Close</button>
+                          <button type="button" onclick="event.stopPropagation(); runEmxSimulation()" class="virtuoso-btn">Reopen</button>
+                        </div>
+                      </div>
+
+                      <!-- Type & Plotting -->
+                      <div onclick="inspectEmxField('plotting')" data-emx-row="plotting" class="virtuoso-row-hover space-y-1 cursor-pointer">
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Type</span>
+                          <select id="emx-device-type" onclick="event.stopPropagation()" onchange="updateSparamPlot()" class="col-span-8 virtuoso-input">
+                            <option value="inductor" selected>Single-ended inductor</option>
+                            <option value="diff_inductor">Differential inductor</option>
+                            <option value="tline">Transmission line</option>
+                          </select>
+                        </div>
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Plotting</span>
+                          <div class="col-span-8 flex flex-wrap items-center gap-1">
+                            <button type="button" onclick="event.stopPropagation(); openSparamViewer()" class="virtuoso-btn">New</button>
+                            <button type="button" onclick="event.stopPropagation(); openSparamViewer()" class="virtuoso-btn">Append</button>
+                            <button type="button" onclick="event.stopPropagation(); openSparamViewer()" class="virtuoso-btn">Replace</button>
+                            <button type="button" onclick="event.stopPropagation(); openSparamViewer()" class="virtuoso-btn virtuoso-btn-active">Viewer</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Results Checkboxes -->
+                      <div onclick="inspectEmxField('results')" data-emx-row="results" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Results</span>
+                        <div class="col-span-8 flex flex-wrap items-center gap-2.5 text-[10px]">
+                          <label class="flex items-center gap-1"><input type="checkbox" checked /> sim</label>
+                          <label class="flex items-center gap-1"><input type="checkbox" /> mod</label>
+                          <label class="flex items-center gap-1"><input type="checkbox" /> pz</label>
+                          <label class="flex items-center gap-1"><input type="checkbox" /> comp</label>
+                          <label class="flex items-center gap-1"><input type="checkbox" /> mc</label>
+                        </div>
+                      </div>
+
+                      <!-- Create model -->
+                      <div onclick="inspectEmxField('createmodel')" data-emx-row="createmodel" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Create model</span>
+                        <div class="col-span-8 flex flex-wrap items-center gap-1">
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('createmodel'); showToast('ModelGen rational broadband SPICE model generated (.mod)')" class="virtuoso-btn">Start</button>
+                          <button type="button" onclick="event.stopPropagation(); showToast('ModelGen passivity & causality check: PASSED')" class="virtuoso-btn">Status</button>
+                          <button type="button" class="virtuoso-btn">Stop</button>
+                          <button type="button" class="virtuoso-btn">Close</button>
+                          <button type="button" class="virtuoso-btn">Reopen</button>
+                        </div>
+                      </div>
+
+                      <!-- Create view -->
+                      <div onclick="inspectEmxField('createview')" data-emx-row="createview" class="virtuoso-row-hover grid grid-cols-12 items-center gap-2 cursor-pointer">
+                        <span class="col-span-4 font-medium text-gray-800">Create view</span>
+                        <div class="col-span-8 flex flex-wrap items-center gap-1">
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('createview'); showToast('Created Virtuoso symbol cellview for schematic instantiation')" class="virtuoso-btn">Symbol</button>
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('createview'); showToast('Created Spectre broadband subcircuit model view')" class="virtuoso-btn">Model</button>
+                          <button type="button" onclick="event.stopPropagation(); inspectEmxField('createview'); showToast('Created Touchstone S-parameter (nport) view')" class="virtuoso-btn">Spar</button>
+                          <button type="button" class="virtuoso-btn">PZ</button>
+                          <button type="button" class="virtuoso-btn">DC</button>
+                        </div>
+                      </div>
+
+                      <!-- Form state & File or view -->
+                      <div onclick="inspectEmxField('formstate')" data-emx-row="formstate" class="virtuoso-row-hover space-y-1 cursor-pointer">
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">Form state</span>
+                          <div class="col-span-8 flex flex-wrap items-center gap-1">
+                            <button type="button" onclick="event.stopPropagation(); showToast('Saved form state to ./EMX_form')" class="virtuoso-btn">Save</button>
+                            <button type="button" onclick="event.stopPropagation(); showToast('Loaded form state from ./EMX_form')" class="virtuoso-btn">Load</button>
+                            <button type="button" onclick="event.stopPropagation(); showToast('Saved form state inside CellView property bag')" class="virtuoso-btn">Save CV</button>
+                            <button type="button" onclick="event.stopPropagation(); showToast('Loaded form state from CellView')" class="virtuoso-btn">Load CV</button>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-12 items-center gap-2">
+                          <span class="col-span-4 font-medium text-gray-800">File or view</span>
+                          <input type="text" value="EMX_form" class="col-span-8 virtuoso-input" />
+                        </div>
+                      </div>
+
+                      <!-- Other & Footer -->
+                      <div class="grid grid-cols-12 items-center gap-2 pt-1 border-t border-gray-300">
+                        <span class="col-span-4 font-medium text-gray-800">Other</span>
+                        <div class="col-span-8 flex flex-wrap items-center gap-1">
+                          <button type="button" onclick="showToast('Cadence EMX 25.10.000 (64-bit Linux) — gpdk045')" class="virtuoso-btn">Version</button>
+                          <button type="button" onclick="showToast('Temporary mesh files cleaned')" class="virtuoso-btn">Clean up</button>
+                          <button type="button" onclick="showToast('EMX User Manual available under $EMXHOME/doc')" class="virtuoso-btn">View docs</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT 5 COLS: Contextual Parameter Inspector + Interactive Cross-Section & S-Param Plotter -->
+              <div class="xl:col-span-5 space-y-4">
+                <!-- Interactive Sub-Tab Switcher -->
+                <div class="no-print bg-slate-100 p-1 rounded-xl border border-slate-200 grid grid-cols-3 gap-1 text-xs font-semibold">
+                  <button id="right-tab-inspector" onclick="switchRightPanel('inspector')" class="py-2 px-2 rounded-lg bg-white text-indigo-700 shadow-sm transition-all">
+                    Parameter Guide
+                  </button>
+                  <button id="right-tab-stackup" onclick="switchRightPanel('stackup')" class="py-2 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
+                    X-Section Stackup
+                  </button>
+                  <button id="right-tab-sparam" onclick="switchRightPanel('sparam')" class="py-2 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
+                    S-Param / L-Q Plot
+                  </button>
+                </div>
+
+                <!-- PANEL A: Contextual Parameter Inspector -->
+                <div id="panel-inspector" class="bg-slate-50 rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">EMX Parameter Inspector</span>
+                    <span id="inspector-badge" class="text-[11px] font-mono bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">Process File</span>
+                  </div>
+                  <h3 id="inspector-title" class="text-base font-bold text-slate-900">Process Stackup File (.proc)</h3>
+                  <p id="inspector-desc" class="text-xs text-slate-700 leading-relaxed">
+                    Defines the foundry layer mapping, metal sheet resistances, vertical thicknesses, via conductivities, and dielectric permittivities for <code class="font-mono">gpdk045</code>. Pre-configured via <code class="font-mono">EMX_process_name</code> in <code class="font-mono">.cdsinit</code>.
+                  </p>
+                  <div class="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
+                    <p class="text-[11px] font-bold text-slate-800">RFIC Engineering Best Practice</p>
+                    <p id="inspector-tip" class="text-xs text-slate-600 leading-relaxed">
+                      Always click <strong>Scaled</strong> or <strong>Unscaled</strong> under <em>X-section</em> on a new PDK setup to confirm layer parsing and license checkout before launching a full frequency sweep.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- PANEL B: gpdk045 Cross-Section Viewer (Triggered by Scaled/Unscaled or Tab) -->
+                <div id="panel-stackup" class="hidden bg-slate-900 text-slate-200 rounded-2xl border border-slate-800 p-4 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-sm font-bold text-white">gpdk045_nominal.proc Stackup</h3>
+                      <p class="text-[11px] text-slate-400" id="stackup-mode-label">Scaled Vertical Aspect Ratio View</p>
+                    </div>
+                    <div class="flex gap-1">
+                      <button onclick="openStackupViewer('scaled')" id="btn-xsec-scaled" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white">Scaled</button>
+                      <button onclick="openStackupViewer('unscaled')" id="btn-xsec-unscaled" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300">Unscaled</button>
+                    </div>
+                  </div>
+
+                  <!-- Clean Inline SVG Stackup Diagram -->
+                  <div class="bg-slate-950 rounded-xl border border-slate-800 p-3">
+                    <svg id="stackup-svg" viewBox="0 0 360 250" class="w-full h-auto">
+                      <!-- Passivation -->
+                      <rect x="30" y="12" width="300" height="18" rx="2" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                      <text x="40" y="24" fill="#94a3b8" font-size="9" font-family="JetBrains Mono">Passivation (Si3N4 / SiO2)</text>
+
+                      <!-- Top Thick RF Metals (Metal7 & Metal6) -->
+                      <rect x="70" y="34" width="220" height="26" rx="2" fill="#14b8a6" fill-opacity="0.85" stroke="#5eead4" stroke-width="1.2" />
+                      <text x="80" y="50" fill="#ffffff" font-size="10" font-weight="bold" font-family="JetBrains Mono">Metal7 (Top Thick RF Inductor Layer)</text>
+
+                      <!-- Via6 -->
+                      <rect x="115" y="60" width="14" height="10" fill="#facc15" />
+                      <rect x="230" y="60" width="14" height="10" fill="#facc15" />
+
+                      <rect x="70" y="70" width="220" height="20" rx="2" fill="#db2777" fill-opacity="0.85" stroke="#f9a8d4" stroke-width="1.2" />
+                      <text x="80" y="83" fill="#ffffff" font-size="9.5" font-weight="bold" font-family="JetBrains Mono">Metal6 (Underpass / Thick RF)</text>
+
+                      <!-- Intermediate Metals M5-M2 -->
+                      <rect x="90" y="98" width="180" height="11" rx="1.5" fill="#d97706" fill-opacity="0.85" />
+                      <text x="98" y="106.5" fill="#ffffff" font-size="8.5" font-family="JetBrains Mono">Metal5</text>
+
+                      <rect x="90" y="116" width="180" height="11" rx="1.5" fill="#0284c7" fill-opacity="0.85" />
+                      <text x="98" y="124.5" fill="#ffffff" font-size="8.5" font-family="JetBrains Mono">Metal4</text>
+
+                      <rect x="90" y="134" width="180" height="11" rx="1.5" fill="#7c3aed" fill-opacity="0.85" />
+                      <text x="98" y="142.5" fill="#ffffff" font-size="8.5" font-family="JetBrains Mono">Metal3</text>
+
+                      <rect x="90" y="152" width="180" height="11" rx="1.5" fill="#dc2626" fill-opacity="0.85" />
+                      <text x="98" y="160.5" fill="#ffffff" font-size="8.5" font-family="JetBrains Mono">Metal2</text>
+
+                      <!-- Metal 1 & Poly -->
+                      <rect x="70" y="170" width="220" height="11" rx="1.5" fill="#2563eb" fill-opacity="0.9" />
+                      <text x="80" y="178.5" fill="#ffffff" font-size="8.5" font-family="JetBrains Mono">Metal1 (Local Interconnect)</text>
+
+                      <rect x="110" y="188" width="140" height="8" rx="1" fill="#16a34a" />
+                      <text x="120" y="194.5" fill="#dcfce7" font-size="8" font-family="JetBrains Mono">Poly / Gate</text>
+
+                      <!-- P-Substrate -->
+                      <rect x="30" y="202" width="300" height="36" rx="3" fill="#334155" stroke="#64748b" stroke-width="1" />
+                      <text x="42" y="223" fill="#e2e8f0" font-size="10" font-weight="bold" font-family="JetBrains Mono">P-Type Silicon Substrate (Lossy RF Ground)</text>
+                    </svg>
+                  </div>
+                  <p class="text-[11px] text-slate-400">
+                    Stackup verified cleanly: <span class="text-emerald-400 font-semibold">License &amp; layer mapping OK</span>.
+                  </p>
+                </div>
+
+                <!-- PANEL C: Interactive S-Parameter & L/Q Plotter -->
+                <div id="panel-sparam" class="hidden bg-slate-900 text-slate-200 rounded-2xl border border-slate-800 p-4 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-sm font-bold text-white" id="plot-device-title">Single-Ended Inductor (0.1 – 20 GHz)</h3>
+                      <p class="text-[11px] text-slate-400">2-Port Differential Extraction (<code class="font-mono text-cyan-400">P1, P2</code>)</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">200 pts</span>
+                  </div>
+
+                  <!-- SVG Frequency Response Plot -->
+                  <div class="bg-slate-950 rounded-xl border border-slate-800 p-2.5">
+                    <svg id="sparam-svg" viewBox="0 0 360 175" class="w-full h-auto">
+                      <!-- Grid lines -->
+                      <line x1="40" y1="20" x2="340" y2="20" stroke="#1e293b" stroke-width="1" />
+                      <line x1="40" y1="55" x2="340" y2="55" stroke="#1e293b" stroke-width="1" />
+                      <line x1="40" y1="90" x2="340" y2="90" stroke="#1e293b" stroke-width="1" />
+                      <line x1="40" y1="125" x2="340" y2="125" stroke="#1e293b" stroke-width="1" />
+                      <line x1="40" y1="150" x2="340" y2="150" stroke="#334155" stroke-width="1.2" />
+                      <line x1="40" y1="15" x2="40" y2="150" stroke="#334155" stroke-width="1.2" />
+
+                      <!-- Axis Labels -->
+                      <text x="8" y="24" fill="#38bdf8" font-size="8.5" font-family="JetBrains Mono">Q=18</text>
+                      <text x="8" y="92" fill="#38bdf8" font-size="8.5" font-family="JetBrains Mono">Q=9</text>
+                      <text x="8" y="148" fill="#94a3b8" font-size="8.5" font-family="JetBrains Mono">0</text>
+                      <text x="40" y="164" fill="#94a3b8" font-size="8.5" font-family="JetBrains Mono">0.1G</text>
+                      <text x="180" y="164" fill="#94a3b8" font-size="8.5" font-family="JetBrains Mono">10GHz</text>
+                      <text x="312" y="164" fill="#94a3b8" font-size="8.5" font-family="JetBrains Mono">20G</text>
+
+                      <!-- Quality Factor Curve (Cyan) -->
+                      <path id="curve-q" d="M 40 148 Q 145 22, 215 65 T 340 146" fill="none" stroke="#38bdf8" stroke-width="2.2" />
+                      <!-- Effective Inductance Curve (Emerald) -->
+                      <path id="curve-l" d="M 40 105 L 170 101 Q 245 92, 285 68 T 340 135" fill="none" stroke="#34d399" stroke-width="2" stroke-dasharray="4 2" />
+
+                      <!-- Interactive Cursor Line -->
+                      <line id="plot-cursor-line" x1="145" y1="15" x2="145" y2="150" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2" />
+                      <circle id="plot-cursor-dot" cx="145" cy="54" r="3.5" fill="#f59e0b" />
+                    </svg>
+
+                    <!-- Frequency Scrub Slider -->
+                    <div class="mt-2 pt-2 border-t border-slate-800 space-y-1">
+                      <div class="flex justify-between text-[11px] font-mono">
+                        <span class="text-amber-400">Freq: <strong id="readout-freq">6.8 GHz</strong></span>
+                        <span class="text-cyan-400">Q: <strong id="readout-q">15.4</strong></span>
+                        <span class="text-emerald-400">L<sub>eff</sub>: <strong id="readout-l">1.42 nH</strong></span>
+                      </div>
+                      <input type="range" id="freq-slider" min="1" max="200" value="68" oninput="updateFreqCursor(this.value)" class="w-full accent-indigo-500 cursor-pointer h-1.5 bg-slate-700 rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Live Solver Console Output Box -->
+                <div id="emx-solver-console" class="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-slate-300 space-y-1">
+                  <div class="flex items-center justify-between text-slate-400 pb-1 border-b border-slate-800">
+                    <span>EMX Solver &amp; CIW Log</span>
+                    <span id="solver-status-pill" class="text-emerald-400 font-semibold">IDLE</span>
+                  </div>
+                  <div id="solver-log-lines" class="space-y-0.5 text-[11px] leading-snug max-h-28 overflow-y-auto">
+                    <div class="text-slate-400">&gt; Ready. Click <span class="text-cyan-300 font-semibold">Start</span> under Simulation in the EMX dialog to run a test sweep.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive Pre-Simulation Verification Checklist -->
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 sm:p-5 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900">Pre-Simulation Readiness Checklist</h3>
+                  <p class="text-xs text-slate-500">Verify all 6 items before running production EM sweeps on RFIC layouts</p>
+                </div>
+                <span id="checklist-counter" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800">0 / 6 Verified</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span><code class="font-mono font-semibold">$EMXHOME</code> points to <code class="font-mono">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</code> in shell before Virtuoso launch.</span>
+                </label>
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span><code class="font-mono font-semibold">.cdsinit</code> loads <code class="font-mono">emxconfig.il</code> and sets <code class="font-mono">EMX_process_name</code> without CIW errors.</span>
+                </label>
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span><strong>Scaled / Unscaled</strong> X-section viewer renders <code class="font-mono">gpdk045_nominal.proc</code> layers cleanly.</span>
+                </label>
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span>Layout pins (<code class="font-mono">P1</code>, <code class="font-mono">P2</code>) match the exact pin names entered in <strong>Signals</strong>.</span>
+                </label>
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span>Active devices (MOSFETs/varactors) are excluded via <strong>Black boxing &rarr; Choose</strong> if simulating top-level interconnects.</span>
+                </label>
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
+                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
+                  <span><strong>Create model &rarr; Start</strong> and <strong>Create view &rarr; Spar / Model</strong> executed to back-annotate schematic simulation.</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 2: PRESENTATION (SLIDE DECK) MODE ==================== -->
+  <div id="presentation-container" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col justify-between">
+    <!-- Slide Canvas -->
+    <div id="slide-stage" class="slide-fade-in bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col justify-between">
+      <!-- Slide Header Bar -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span id="slide-badge" class="px-2.5 py-1 rounded-lg bg-indigo-600 font-mono text-xs font-bold">SLIDE 1 / 7</span>
+          <span id="slide-category" class="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Overview</span>
+        </div>
+        <span class="text-xs font-mono text-slate-400 hidden sm:inline">Cadence EMX 25.10.000 &bull; gpdk045</span>
+      </div>
+
+      <!-- Dynamic Slide Body -->
+      <div id="slide-body" class="p-6 sm:p-10 flex-1 flex flex-col justify-center">
+        <!-- Populated dynamically by JavaScript -->
+      </div>
+
+      <!-- Slide Footer Bar -->
+      <div class="bg-slate-50 border-t border-slate-200 px-6 py-3 flex items-center justify-between text-xs text-slate-500">
+        <span>Use <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[11px]">&larr;</kbd> and <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[11px]">&rarr;</kbd> arrow keys to navigate slides</span>
+        <span class="font-mono">Sanitized RFIC Lab Guide</span>
+      </div>
+    </div>
+
+    <!-- Slide Controls & Thumbnail Strip -->
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+      <button onclick="prevSlide()" id="btn-prev-slide" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-xs shadow-sm flex items-center gap-2 disabled:opacity-40">
+        <span>&larr; Previous Slide</span>
+      </button>
+
+      <!-- Slide Dots -->
+      <div id="slide-dots" class="flex items-center gap-2 flex-wrap justify-center"></div>
+
+      <button onclick="nextSlide()" id="btn-next-slide" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-sm flex items-center gap-2 disabled:opacity-40">
+        <span>Next Slide &rarr;</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="no-print border-t border-slate-200 bg-white py-4 mt-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <span>Cadence Virtuoso EMX 25.10.000 Integration &amp; Simulation Guide (<code class="font-mono">gpdk045</code>)</span>
+      <span>All server hostnames, usernames, and institutional paths sanitized for safe sharing.</span>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // Track state
+    const completedSteps = new Set();
+    let currentViewMode = 'tutorial';
+    let showAllSteps = true;
+    let activeStepFilter = 1;
+    let currentSlideIndex = 0;
+
+    // Toast notification helper (replaces alert/confirm)
+    let toastTimer = null;
+    function showToast(message) {
+      const banner = document.getElementById('toast-banner');
+      const text = document.getElementById('toast-text');
+      text.textContent = message;
+      banner.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 2800);
+    }
+
+    // Iframe-safe clipboard helper using document.execCommand('copy')
+    function copyText(text) {
+      try {
+        const tempArea = document.createElement('textarea');
+        tempArea.value = text;
+        tempArea.style.position = 'fixed';
+        tempArea.style.left = '-9999px';
+        document.body.appendChild(tempArea);
+        tempArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempArea);
+        showToast('Copied command to clipboard');
+      } catch (err) {
+        showToast('Unable to access clipboard in this context');
+      }
+    }
+
+    // Mobile sidebar toggle
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('tutorial-sidebar');
+      sidebar.classList.toggle('hidden');
+    }
+
+    // Step navigation and filtering
+    function scrollToStep(stepNum) {
+      activeStepFilter = stepNum;
+
+      // Update sidebar active state
+      document.querySelectorAll('[data-step-btn]').forEach(btn => {
+        const num = parseInt(btn.getAttribute('data-step-btn'), 10);
+        const badge = btn.querySelector('span span:first-child');
+        if (num === stepNum) {
+          btn.className = 'w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors bg-indigo-50 text-indigo-700 border border-indigo-200';
+          badge.className = 'w-5 h-5 rounded-md bg-indigo-600 text-white font-mono text-[11px] flex items-center justify-center font-bold';
+        } else {
+          btn.className = 'w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-50 border border-transparent';
+          badge.className = 'w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold';
+        }
+      });
+
+      if (!showAllSteps) {
+        applyStepVisibility();
+      } else {
+        const target = document.getElementById('step-' + stepNum);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+
+    function toggleShowAllSteps() {
+      showAllSteps = !showAllSteps;
+      const btn = document.getElementById('toggle-all-steps-btn');
+      btn.textContent = showAllSteps ? 'Showing All Steps' : 'Single-Step Focus';
+      applyStepVisibility();
+    }
+
+    function applyStepVisibility() {
+      for (let i = 1; i <= 6; i++) {
+        const sec = document.getElementById('step-' + i);
+        if (!sec) continue;
+        if (showAllSteps || i === activeStepFilter) {
+          sec.classList.remove('hidden');
+        } else {
+          sec.classList.add('hidden');
+        }
+      }
+    }
+
+    // Mark step complete toggle
+    function toggleStepDone(stepNum) {
+      const btn = document.getElementById('mark-done-btn-' + stepNum);
+      const check = document.getElementById('step-check-' + stepNum);
+
+      if (completedSteps.has(stepNum)) {
+        completedSteps.delete(stepNum);
+        btn.textContent = 'Mark Step Complete';
+        btn.className = 'no-print px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors';
+        check.textContent = '○';
+        check.className = 'text-slate-300 font-bold';
+      } else {
+        completedSteps.add(stepNum);
+        btn.textContent = '✓ Completed';
+        btn.className = 'no-print px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white border border-emerald-600 shadow-sm transition-colors';
+        check.textContent = '✓';
+        check.className = 'text-emerald-600 font-bold';
+        showToast(`Step ${stepNum} marked complete`);
+      }
+
+      const count = completedSteps.size;
+      document.getElementById('sidebar-progress-badge').textContent = `${count} / 6 Done`;
+      document.getElementById('sidebar-progress-bar').style.width = `${(count / 6) * 100}%`;
+    }
+
+    // Interactive .cdsinit Builder (Step 4)
+    function applyCornerPreset() {
+      const corner = document.getElementById('builder-corner-preset').value;
+      const procInput = document.getElementById('builder-proc-path');
+      const base = procInput.value.replace(/[^/]+\.proc$/, '');
+      procInput.value = base + corner;
+      updateCdsinitBuilder();
+    }
+
+    function updateCdsinitBuilder() {
+      const emxHome = document.getElementById('builder-emx-home').value.trim() || '<EMX_INSTALL_DIR>/EMX_25.10.000';
+      const procPath = document.getElementById('builder-proc-path').value.trim() || '<PDK_DIR>/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc';
+      const includeHome = document.getElementById('builder-include-home').checked;
+
+      let lines = [];
+      if (includeHome) {
+        lines.push('; Preserve user home .cdsinit settings if present');
+        lines.push('when(isFile("~/.cdsinit") load("~/.cdsinit"))');
+        lines.push('');
+      }
+      lines.push('; Load Cadence EMX Virtuoso Interface');
+      lines.push(`load("${emxHome}/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il")`);
+      lines.push('');
+      lines.push('; Default gpdk045 Process Stackup File');
+      lines.push(`EMX_process_name = "${procPath}"`);
+
+      document.getElementById('builder-output-preview').textContent = lines.join('\n');
+    }
+
+    function copyGeneratedCdsinit() {
+      const code = document.getElementById('builder-output-preview').textContent;
+      copyText(code);
+      showToast('Generated .cdsinit SKILL block copied!');
+    }
+
+    // Step 6: Interactive EMX Parameter Inspector Data
+    const emxFieldDocs = {
+      process: {
+        badge: 'Process File',
+        title: 'Process Stackup File (.proc)',
+        desc: 'Specifies the foundry technology stackup file (<PDK_DIR>/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc) mapping Virtuoso GDS/OA layers to physical metal thicknesses, conductivities, and dielectric layers.',
+        tip: 'Pre-filled automatically when EMX_process_name is defined in .cdsinit. Switch to gpdk045_rcmax.proc or gpdk045_rcmin.proc for corner sign-off.'
+      },
+      options: {
+        badge: 'CLI Flags',
+        title: 'Additional EMX Command-Line Options',
+        desc: 'Passes raw flags directly to the underlying emx solver executable (for example, --verbose=3, --simultaneous-frequencies=4, or --quasistatic).',
+        tip: 'Leave blank for standard broadband full-wave simulations; add --verbose=3 when diagnosing port attachment or mesh density.'
+      },
+      xsection: {
+        badge: 'Stackup Check',
+        title: 'Cross-Section Viewer (Scaled / Unscaled)',
+        desc: 'Launches the EMX stackup visualizer to inspect vertical metal heights and dielectric layers parsed from gpdk045_nominal.proc.',
+        tip: 'Use Unscaled to clearly read thin lower routing layers (M1–M4) and Scaled to inspect true physical aspect ratios of thick top RF metals (M6–M7).'
+      },
+      blackbox: {
+        badge: 'Hierarchy',
+        title: 'Black Boxing & Pin Report',
+        desc: 'Excludes active transistor cells (MOSFETs, diodes) or pre-characterized sub-blocks from the EM mesh while preserving their connection pins as internal EM ports.',
+        tip: 'Click Pin report before simulating to confirm every intended layout pin is recognized on a valid conducting layer.'
+      },
+      layoutview: {
+        badge: 'Geometry',
+        title: 'Layout View Inspection (EMX / Masks / Raw)',
+        desc: 'Overlays the derived Boolean mask shapes (Masks) or discretized EM polygons (EMX) directly onto your Virtuoso layout window.',
+        tip: 'Helpful for verifying via arrays and dummy fill filtering prior to running a full frequency sweep.'
+      },
+      edgemesh: {
+        badge: 'Mesh = 1 µm',
+        title: 'Edge Mesh Granularity (1 µm)',
+        desc: 'Controls lateral mesh subdivision along conductor edges to capture current crowding and high-frequency skin/proximity effects.',
+        tip: '1 µm provides strong accuracy up to 20–30 GHz on gpdk045 spirals. Reduce to 0.5 µm for mmWave (>40 GHz) inductors or narrow transmission lines.'
+      },
+      thickness: {
+        badge: 'Vertical = 1',
+        title: 'Vertical Thickness Subdivision (1)',
+        desc: 'Sets the number of vertical current filaments across thick metal layers to model vertical current distribution and skin depth.',
+        tip: 'A value of 1 is fast and accurate for standard RF blocks; increase to 2 on thick top inductor metals when accurate Q-factor peak prediction is critical.'
+      },
+      viamerge: {
+        badge: 'Via Merge = 0.5',
+        title: 'Via Array Merging Distance (0.5 µm)',
+        desc: 'Merges dense arrays of minimum-size foundry vias separated by less than 0.5 µm into equivalent conductive blocks, dramatically reducing unknown count without losing accuracy.',
+        tip: 'Essential in 45 nm / 28 nm PDKs where large via arrays between M6 and M7 would otherwise create tens of thousands of tiny mesh elements.'
+      },
+      metals3d: {
+        badge: '3D Metals = *',
+        title: '3D Volume-Meshed Metals (*)',
+        desc: 'The wildcard (*) instructs EMX to model all conductor layers with full 3D side-wall capacitance and finite thickness rather than zero-thickness sheets.',
+        tip: 'Keep set to * for spiral inductors and transformers where side-wall coupling between adjacent turns dominates self-resonant frequency (SRF).'
+      },
+      surfacemetals: {
+        badge: 'Sheet Metals',
+        title: 'Surface (Zero-Thickness) Metals',
+        desc: 'Optional list of thin lower-level metals to approximate as 2D surface impedance sheets to accelerate large full-chip routing extractions.',
+        tip: 'Leave blank when 3D metals is set to * so every layer receives full 3D modeling.'
+      },
+      signals: {
+        badge: 'Ports: P1 P2',
+        title: 'Signal Port Definitions (P1 P2)',
+        desc: 'Lists the layout pin names that act as excited RF ports in the resulting Touchstone S-parameter matrix (2-port network for P1 and P2).',
+        tip: 'Pin names in Signals must match the exact case-sensitive terminal/pin labels placed in your Virtuoso layout view.'
+      },
+      grounds: {
+        badge: 'Ground Ref',
+        title: 'Explicit Ground Pins',
+        desc: 'Specifies layout pins tied to the local return reference (such as a patterned ground shield or guard ring).',
+        tip: 'If your inductor includes a patterned ground shield (PGS) pin (e.g., VSS), enter it here so shield return currents are properly referenced.'
+      },
+      globalref: {
+        badge: 'Reference',
+        title: 'Global Ground Reference Toggle',
+        desc: 'When enabled, ports reference an ideal global return at infinity/substrate bottom rather than requiring an explicit local ground pin.',
+        tip: 'Leave unchecked when referencing ports against explicit local ground rings, or enable for floating differential spiral characterization.'
+      },
+      freq: {
+        badge: '0.1 – 20 GHz',
+        title: 'Frequency Sweep (1e+08 to 2e+10 Hz)',
+        desc: 'Sweeps from Start freq = 100 MHz (1e+08) to Stop = 20 GHz (2e+10) in 100 MHz steps (1e+08), yielding 200 linear frequency points.',
+        tip: 'Always include a low frequency point (e.g., 100 MHz) so ModelGen can accurately extract DC series resistance and low-frequency inductance.'
+      },
+      advanced: {
+        badge: 'Solver Controls',
+        title: 'Advanced EMX Options',
+        desc: 'Opens substrate impedance, temperature (e.g., 27°C vs 125°C), parallel CPU thread count, and adaptive frequency interpolation settings.',
+        tip: 'Check CPU thread allocation here when running large multi-turn baluns or full LNA passive networks.'
+      },
+      simulation: {
+        badge: 'Run Solver',
+        title: 'Simulation Execution Controls',
+        desc: 'Starts the 3D planar electromagnetic field solver, monitors live convergence status, or stops/reopens the solver log window.',
+        tip: 'Click Start in the dialog on the left to test the simulated solver log and inspect the generated 2-port inductor curves!'
+      },
+      plotting: {
+        badge: 'Viewer',
+        title: 'Device Type & S-Parameter / L-Q Viewer',
+        desc: 'Selects passive interpretation (Single-ended inductor, Differential inductor, Transmission line) and launches the integrated waveform viewer.',
+        tip: 'Automatically computes effective inductance L(f) and quality factor Q(f) directly from Y-parameters.'
+      },
+      results: {
+        badge: 'Outputs',
+        title: 'Output Data Files (sim, mod, pz, comp, mc)',
+        desc: 'Selects which extracted artifacts are retained: sim (raw S-parameters), mod (broadband rational SPICE model), pz (pole-zero), comp (compact), mc (Monte Carlo).',
+        tip: 'Keep sim checked for S-parameter viewing; enable mod when generating broadband Spectre subcircuits.'
+      },
+      createmodel: {
+        badge: 'ModelGen',
+        title: 'Broadband Rational Model Generation',
+        desc: 'Runs Cadence ModelGen to fit a passive, causal lumped-element SPICE subcircuit (.mod) valid from DC up to 20 GHz for transient and periodic steady-state (PSS) simulations.',
+        tip: 'Essential before running Spectre transient or HB/PSS simulations where raw Touchstone files can exhibit causality issues.'
+      },
+      createview: {
+        badge: 'Virtuoso Views',
+        title: 'Create Virtuoso Cellviews (Symbol / Model / Spar)',
+        desc: 'Generates native Virtuoso views directly inside LNA_Tutorial/Step4_Schematic_Full so you can drop the EM-extracted passive into ADE Assembler schematics.',
+        tip: 'Generate both Spar (for AC/SP/Noise) and Model (for Transient/PSS) views.'
+      },
+      formstate: {
+        badge: 'State Save',
+        title: 'Save / Load Form State (EMX_form)',
+        desc: 'Saves all port, mesh, and frequency settings either to a local file (EMX_form) or directly inside the Virtuoso CellView property bag (Save CV).',
+        tip: 'Use Save CV so any teammate opening the layout cellview inherits the exact EMX port and mesh setup.'
+      }
+    };
+
+    function inspectEmxField(key) {
+      const data = emxFieldDocs[key];
+      if (!data) return;
+
+      // Highlight selected row in dialog
+      document.querySelectorAll('[data-emx-row]').forEach(row => {
+        if (row.getAttribute('data-emx-row') === key) {
+          row.classList.add('virtuoso-row-selected');
+        } else {
+          row.classList.remove('virtuoso-row-selected');
+        }
+      });
+
+      switchRightPanel('inspector');
+      document.getElementById('inspector-badge').textContent = data.badge;
+      document.getElementById('inspector-title').textContent = data.title;
+      document.getElementById('inspector-desc').textContent = data.desc;
+      document.getElementById('inspector-tip').textContent = data.tip;
+    }
+
+    function switchRightPanel(tab) {
+      const tabs = ['inspector', 'stackup', 'sparam'];
+      tabs.forEach(t => {
+        const panel = document.getElementById('panel-' + t);
+        const btn = document.getElementById('right-tab-' + t);
+        if (t === tab) {
+          panel.classList.remove('hidden');
+          btn.className = 'py-2 px-2 rounded-lg bg-white text-indigo-700 shadow-sm transition-all';
+        } else {
+          panel.classList.add('hidden');
+          btn.className = 'py-2 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all';
+        }
+      });
+    }
+
+    function openStackupViewer(mode) {
+      switchRightPanel('stackup');
+      const label = document.getElementById('stackup-mode-label');
+      const btnScaled = document.getElementById('btn-xsec-scaled');
+      const btnUnscaled = document.getElementById('btn-xsec-unscaled');
+
+      if (mode === 'scaled') {
+        label.textContent = 'Scaled Vertical Aspect Ratio View (True Physical Proportions)';
+        btnScaled.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white';
+        btnUnscaled.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300';
+      } else {
+        label.textContent = 'Unscaled Schematic Layer View (Equalized Layer Heights for Readability)';
+        btnUnscaled.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white';
+        btnScaled.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300';
+      }
+      showToast(`Opened gpdk045_nominal.proc (${mode} cross-section)`);
+    }
+
+    function openSparamViewer() {
+      switchRightPanel('sparam');
+      updateSparamPlot();
+    }
+
+    function updateSparamPlot() {
+      const type = document.getElementById('emx-device-type').value;
+      const title = document.getElementById('plot-device-title');
+      if (type === 'inductor') {
+        title.textContent = 'Single-Ended Inductor (0.1 – 20 GHz)';
+      } else if (type === 'diff_inductor') {
+        title.textContent = 'Differential Inductor (0.1 – 20 GHz)';
+      } else {
+        title.textContent = 'RF Transmission Line (0.1 – 20 GHz)';
+      }
+      updateFreqCursor(document.getElementById('freq-slider').value);
+    }
+
+    function updateFreqCursor(stepVal) {
+      const idx = parseInt(stepVal, 10);
+      const freqGhz = (idx * 0.1).toFixed(1);
+      const xPos = 40 + ((idx - 1) / 199) * 300;
+
+      // Synthetic realistic inductor Q and Leff curves
+      const norm = idx / 200;
+      const qVal = Math.max(0.5, (17.2 * Math.sin(norm * Math.PI * 0.92))).toFixed(1);
+      const lVal = norm < 0.78 ? (1.38 + 0.35 * Math.pow(norm / 0.78, 3)).toFixed(2) : (1.73 - (norm - 0.78) * 5.2).toFixed(2);
+      const yPos = 148 - (parseFloat(qVal) / 18) * 125;
+
+      document.getElementById('plot-cursor-line').setAttribute('x1', xPos);
+      document.getElementById('plot-cursor-line').setAttribute('x2', xPos);
+      document.getElementById('plot-cursor-dot').setAttribute('cx', xPos);
+      document.getElementById('plot-cursor-dot').setAttribute('cy', yPos);
+
+      document.getElementById('readout-freq').textContent = `${freqGhz} GHz`;
+      document.getElementById('readout-q').textContent = qVal;
+      document.getElementById('readout-l').textContent = `${lVal} nH`;
+    }
+
+    function runEmxSimulation() {
+      const pill = document.getElementById('solver-status-pill');
+      const logBox = document.getElementById('solver-log-lines');
+      pill.textContent = 'RUNNING...';
+      pill.className = 'text-amber-400 font-semibold animate-pulse';
+
+      logBox.innerHTML = `<div class="text-cyan-300">&gt; Checking out EMX_Solver license... OK</div>`;
+
+      setTimeout(() => {
+        logBox.innerHTML += `<div>&gt; Parsing gpdk045_nominal.proc (Edge mesh=1, Via merge=0.5, 3D=*)</div>`;
+      }, 300);
+
+      setTimeout(() => {
+        logBox.innerHTML += `<div>&gt; Discretizing ports P1, P2 (3,412 unknowns)...</div>`;
+      }, 650);
+
+      setTimeout(() => {
+        logBox.innerHTML += `<div class="text-emerald-400">&gt; Sweep complete: 100 MHz to 20.0 GHz (200 points) in 1.2s.</div>`;
+        pill.textContent = 'COMPLETED';
+        pill.className = 'text-emerald-400 font-semibold';
+        openSparamViewer();
+        showToast('EMX 25.10 simulation completed — S-Parameter viewer updated');
+      }, 1050);
+    }
+
+    function updateChecklist() {
+      const checks = document.querySelectorAll('.emx-check');
+      let checkedCount = 0;
+      checks.forEach(c => { if (c.checked) checkedCount++; });
+      const badge = document.getElementById('checklist-counter');
+      badge.textContent = `${checkedCount} / ${checks.length} Verified`;
+      if (checkedCount === checks.length) {
+        badge.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white';
+        showToast('All 6 pre-simulation checks verified!');
+      } else {
+        badge.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800';
+      }
+    }
+
+    // ==================== PRESENTATION (SLIDE DECK) DATA & RENDERER ====================
+    const presentationSlides = [
+      {
+        category: 'Title & Architecture',
+        render: () => `
+          <div class="space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
+              <span>Cadence EMX 25.10.000</span>
+              <span>&bull;</span>
+              <span>Virtuoso Studio Layout</span>
+              <span>&bull;</span>
+              <span>gpdk045</span>
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Integrating &amp; Running Cadence EMX in Virtuoso (<code class="font-mono text-indigo-600">gpdk045</code>)
+            </h2>
+            <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+              A complete step-by-step workflow for linking the EMX 3D planar electromagnetic solver into Cadence Virtuoso, binding the <code class="font-mono text-slate-800">gpdk045</code> nominal stackup, and running 2-port RF passive extractions.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <p class="text-xs font-bold uppercase text-indigo-600">1. Environment &amp; SKILL</p>
+                <p class="text-sm font-semibold text-slate-900 mt-1">C-Shell &amp; <code class="font-mono">emxconfig.il</code></p>
+                <p class="text-xs text-slate-500 mt-1">Verify <code class="font-mono">$EMXHOME</code> and SKILL interface paths.</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <p class="text-xs font-bold uppercase text-cyan-600">2. PDK Stackup Binding</p>
+                <p class="text-sm font-semibold text-slate-900 mt-1"><code class="font-mono">gpdk045_nominal.proc</code></p>
+                <p class="text-xs text-slate-500 mt-1">Configure <code class="font-mono">.cdsinit</code> without shadowing site files.</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <p class="text-xs font-bold uppercase text-emerald-600">3. EM Extraction</p>
+                <p class="text-sm font-semibold text-slate-900 mt-1">0.1 – 20 GHz S-Params</p>
+                <p class="text-xs text-slate-500 mt-1">Mesh setup, cross-section verification &amp; ModelGen.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        category: 'Step 01 &bull; Environment Discovery',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 1: Locate EMX &amp; Verify C-Shell Environment</h2>
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+              </div>
+              <div class="p-4 font-mono text-xs sm:text-sm space-y-1.5">
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">which emx</span></div>
+                <div class="text-cyan-300">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/bin/emx</div>
+                <div class="pt-1"><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white font-semibold">find $EMXHOME -name "emxconfig.il"</span></div>
+                <div class="text-cyan-300">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+                <strong>C-Shell Syntax Note:</strong> Avoid Bash's <code class="font-mono">2&gt;/dev/null</code> inside <code class="font-mono">csh/tcsh</code>; it triggers <code class="font-mono">find: paths must precede expression: 2</code>.
+              </div>
+              <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900">
+                <strong>SKILL Entry File:</strong> EMX 25.10 loads via <code class="font-mono">emxconfig.il</code> inside <code class="font-mono">share/emx/virtuoso_ui/emxinterface/emxskill/</code>.
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        category: 'Step 02 &bull; SKILL Configuration Inspection',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 2: Inspect <code class="font-mono text-indigo-600">emxconfig.il</code> Auto-Configuration</h2>
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <span class="text-xs font-mono text-slate-300">head -n 40 .../emxskill/emxconfig.il</span>
+              </div>
+              <div class="p-4 font-mono text-xs sm:text-sm space-y-1">
+                <div class="text-amber-300">(if (getShellEnvVar "EMXHOME")</div>
+                <div class="text-cyan-300 pl-4">EMX_interface_path=(sprintf nil "%s/share/emx/virtuoso_ui/emxinterface"</div>
+                <div class="text-cyan-300 pl-16">(getShellEnvVar "EMXHOME"))</div>
+                <div class="text-rose-300 pl-2">EMX_interface_path=(pwd))</div>
+                <div class="text-emerald-300 font-semibold pt-2">EMX_auto_config=t</div>
+              </div>
+            </div>
+            <ul class="space-y-2 text-sm text-slate-700 list-disc pl-5">
+              <li><strong><code class="font-mono">EMXHOME</code> Requirement:</strong> Must be exported in your shell environment; otherwise <code class="font-mono">EMX_interface_path</code> defaults to <code class="font-mono">(pwd)</code> and fails to locate <code class="font-mono">emxform.ils</code>.</li>
+              <li><strong><code class="font-mono">EMX_auto_config=t</code>:</strong> Automatically pairs EMX solver, ModelGen, and ParaView binaries with Virtuoso.</li>
+            </ul>
+          </div>
+        `
+      },
+      {
+        category: 'Step 03 &bull; Precedence & Environment Verification',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 3: Check Existing <code class="font-mono text-indigo-600">.cdsinit</code> Precedence</h2>
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <span class="text-xs font-mono text-slate-300">designer@eda-server:myProjects</span>
+              </div>
+              <div class="p-4 font-mono text-xs space-y-1">
+                <div><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white">ls -la .cdsinit ~/.cdsinit</span></div>
+                <div class="text-slate-400">ls: cannot access '.cdsinit': No such file or directory</div>
+                <div class="text-slate-400">ls: cannot access '/home/designer/.cdsinit': No such file or directory</div>
+                <div class="pt-1"><span class="text-emerald-400">[designer@eda-server myProjects]$</span> <span class="text-white">env | grep -E "EMX|CDS"</span></div>
+                <div class="text-cyan-300">EMXHOME=&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</div>
+                <div class="text-slate-300">CDSHOME=&lt;CADENCE_DIR&gt;/IC/cur &nbsp;|&nbsp; CDS_AUTO_64BIT=ALL</div>
+              </div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+              <p class="font-bold text-slate-900">Virtuoso .cdsinit Loading Order:</p>
+              <p>1. <code class="font-mono">$CDSHOME/tools/dfII/local/.cdsinit</code> (Site PDK) &rarr; 2. <code class="font-mono">./.cdsinit</code> (Project Dir) OR <code class="font-mono">~/.cdsinit</code> (Home).</p>
+              <p class="text-indigo-700 font-medium">Because neither user file exists, creating <code class="font-mono">&lt;PROJECT_DIR&gt;/myProjects/.cdsinit</code> preserves all site PDK settings.</p>
+            </div>
+          </div>
+        `
+      },
+      {
+        category: 'Step 04 &bull; Project Initialization File',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 4: Configure <code class="font-mono text-indigo-600">.cdsinit</code> &amp; Default <code class="font-mono text-indigo-600">gpdk045</code> Stackup</h2>
+            <p class="text-sm text-slate-600">Add the SKILL loader and default process stackup path to <code class="font-mono text-slate-900">&lt;PROJECT_DIR&gt;/myProjects/.cdsinit</code>:</p>
+            <div class="linux-terminal">
+              <div class="linux-terminal-header">
+                <span class="text-xs font-mono text-slate-300">&lt;PROJECT_DIR&gt;/myProjects/.cdsinit</span>
+              </div>
+              <div class="p-5 font-mono text-xs sm:text-sm space-y-2 leading-relaxed">
+                <div class="text-slate-400">; Load Cadence EMX Virtuoso Interface</div>
+                <div class="text-cyan-300">load("&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il")</div>
+                <div class="text-slate-400 pt-2">; Default gpdk045 Process Stackup File</div>
+                <div class="text-emerald-300">EMX_process_name = "&lt;PDK_DIR&gt;/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc"</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        category: 'Step 05 &bull; Virtuoso Startup & Verification',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 5: Launch Virtuoso &amp; Verify EMX Menu</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 class="text-sm font-bold text-slate-900">1. Launch or Reload Live</h3>
+                <p class="text-xs text-slate-600">Start <code class="font-mono">virtuoso &amp;</code> from <code class="font-mono">myProjects</code>, or reload inside an active CIW prompt:</p>
+                <pre class="bg-slate-900 text-emerald-300 p-2.5 rounded-lg font-mono text-xs">load("&lt;PROJECT_DIR&gt;/myProjects/.cdsinit")</pre>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 class="text-sm font-bold text-slate-900">2. Confirm Layout Top Menu</h3>
+                <p class="text-xs text-slate-600">Open <code class="font-mono">LNA_Tutorial / Step4_Schematic_Full / layout</code> and verify the <strong>EMX</strong> menu:</p>
+                <div class="bg-slate-200 px-3 py-2 rounded-lg text-xs font-mono text-slate-800">
+                  ... | Place | Route | Concurrent | <span class="bg-indigo-600 text-white px-1.5 py-0.5 rounded font-bold">EMX</span> | Help
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        category: 'Step 06 &bull; EMX Simulation Parameters',
+        render: () => `
+          <div class="space-y-5">
+            <h2 class="text-2xl font-bold text-slate-900">Step 6: Recommended <code class="font-mono text-indigo-600">gpdk045</code> Inductor Simulation Setup</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="font-bold text-indigo-700">Process &amp; X-Section</p>
+                <p class="font-mono text-slate-900 mt-1">gpdk045_nominal.proc</p>
+                <p class="text-slate-600 mt-1">Click <strong>Scaled / Unscaled</strong> to verify stackup &amp; license checkout.</p>
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="font-bold text-indigo-700">3D Mesh Controls</p>
+                <p class="font-mono text-slate-900 mt-1">Edge=1, Thick=1, Via=0.5, 3D=*</p>
+                <p class="text-slate-600 mt-1">Captures side-wall coupling while merging dense via arrays.</p>
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="font-bold text-indigo-700">Ports &amp; Frequency Sweep</p>
+                <p class="font-mono text-slate-900 mt-1">Signals: P1 P2 | 0.1–20 GHz</p>
+                <p class="text-slate-600 mt-1">200 linear steps (<code class="font-mono">1e+08</code>) for accurate DC-to-RF ModelGen fitting.</p>
+              </div>
+            </div>
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+              <strong>Post-Simulation Flow:</strong> Click <strong>Simulation &rarr; Start</strong> &rarr; inspect curves in <strong>Plotting &rarr; Viewer</strong> &rarr; run <strong>Create model &rarr; Start</strong> &rarr; generate schematic views via <strong>Create view &rarr; Spar / Model</strong>.
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    // Switch between Tutorial Mode and Presentation Slide Mode
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const tutContainer = document.getElementById('tutorial-container');
+      const slideContainer = document.getElementById('presentation-container');
+      const btnTut = document.getElementById('btn-mode-tutorial');
+      const btnSlides = document.getElementById('btn-mode-slides');
+
+      if (mode === 'tutorial') {
+        tutContainer.classList.remove('hidden');
+        slideContainer.classList.add('hidden');
+        btnTut.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow';
+        btnSlides.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white';
+      } else {
+        tutContainer.classList.add('hidden');
+        slideContainer.classList.remove('hidden');
+        btnSlides.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow';
+        btnTut.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white';
+        renderSlide(currentSlideIndex);
+      }
+    }
+
+    function renderSlide(index) {
+      currentSlideIndex = Math.max(0, Math.min(presentationSlides.length - 1, index));
+      const slide = presentationSlides[currentSlideIndex];
+
+      document.getElementById('slide-badge').textContent = `SLIDE ${currentSlideIndex + 1} / ${presentationSlides.length}`;
+      document.getElementById('slide-category').innerHTML = slide.category;
+
+      const body = document.getElementById('slide-body');
+      body.innerHTML = slide.render();
+
+      const stage = document.getElementById('slide-stage');
+      stage.classList.remove('slide-fade-in');
+      void stage.offsetWidth;
+      stage.classList.add('slide-fade-in');
+
+      document.getElementById('btn-prev-slide').disabled = currentSlideIndex === 0;
+      document.getElementById('btn-next-slide').disabled = currentSlideIndex === presentationSlides.length - 1;
+
+      // Render slide navigation pills
+      const dotsContainer = document.getElementById('slide-dots');
+      dotsContainer.innerHTML = presentationSlides.map((_, idx) => {
+        const active = idx === currentSlideIndex;
+        return `<button onclick="renderSlide(${idx})" class="h-2.5 rounded-full transition-all ${active ? 'w-7 bg-indigo-600' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}" aria-label="Slide ${idx + 1}"></button>`;
+      }).join('');
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) renderSlide(currentSlideIndex - 1);
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < presentationSlides.length - 1) renderSlide(currentSlideIndex + 1);
+    }
+
+    // Keyboard navigation for Presentation Mode (ignores inputs/textareas)
+    document.addEventListener('keydown', (e) => {
+      if (currentViewMode !== 'slides') return;
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Print / Save PDF Handler
+    function printManual() {
+      if (currentViewMode !== 'tutorial') {
+        setViewMode('tutorial');
+      }
+      if (!showAllSteps) {
+        showAllSteps = true;
+        applyStepVisibility();
+      }
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    }
+
+    // Initialize dynamic components on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateCdsinitBuilder();
+      updateFreqCursor(68);
+    });
+  </script>
+</body>
+</html>
