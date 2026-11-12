@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadence Virtuoso &amp; HFSS Hotkeys Reference Guide</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================================
+       DESIGN TOKENS — LIGHT MODE ONLY (RFIC & EDA LAB HUB PALETTE)
+       ========================================================================= */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-pill-sky: rgba(2, 132, 199, 0.09);
+      --bg-pill-indigo: rgba(79, 70, 229, 0.09);
+      --border-card: rgba(15, 23, 42, 0.1);
+      --border-sky: rgba(2, 132, 199, 0.28);
+      --border-indigo: rgba(79, 70, 229, 0.28);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-sky: #0284c7;
+      --accent-indigo: #4f46e5;
+      --grid-line: rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 10px 26px -6px rgba(15, 23, 42, 0.07), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* 40px subtle engineering grid background */
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Ambient subtle top radial highlight */
+    .top-glow {
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 920px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(2, 132, 199, 0.11) 0%, rgba(79, 70, 229, 0.05) 45%, transparent 72%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* =========================================================================
+       MINIMAL STATIC TOP HEADER BAR
+       ========================================================================= */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(248, 250, 252, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.42rem 0.8rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent-sky);
+      color: var(--accent-sky);
+    }
+
+    .header-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 0.32rem 0.75rem;
+      border-radius: 999px;
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+      letter-spacing: 0.01em;
+    }
+
+    /* =========================================================================
+       MAIN CONTAINER & HERO SECTION
+       ========================================================================= */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.75rem 1.5rem 4.5rem;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.36rem 0.95rem;
+      border-radius: 999px;
+      background: var(--bg-pill-sky);
+      border: 1px solid var(--border-sky);
+      color: var(--accent-sky);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo));
+    }
+
+    .hero h1 {
+      font-size: clamp(1.95rem, 4.2vw, 2.95rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.16;
+      color: var(--text-primary);
+      margin-bottom: 0.85rem;
+    }
+
+    .hero h1 .accent-gradient {
+      background: linear-gradient(135deg, var(--accent-sky) 0%, var(--accent-indigo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.02rem;
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* =========================================================================
+       MAJOR SECTION HEADERS (SECTION 1: CADENCE, SECTION 2: HFSS)
+       ========================================================================= */
+    .tool-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .tool-section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .section-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1.15rem 1.45rem;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-banner.cadence-accent {
+      border-left: 4px solid var(--accent-sky);
+    }
+
+    .section-banner.hfss-accent {
+      border-left: 4px solid var(--accent-indigo);
+    }
+
+    .section-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.32rem 0.62rem;
+      border-radius: 8px;
+      color: #ffffff;
+    }
+
+    .cadence-accent .section-num {
+      background: linear-gradient(135deg, var(--accent-sky), #0369a1);
+    }
+
+    .hfss-accent .section-num {
+      background: linear-gradient(135deg, var(--accent-indigo), #3730a3);
+    }
+
+    .section-banner h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .section-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      background: var(--bg-card-subtle);
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+    }
+
+    /* =========================================================================
+       SUBSECTION CARDS (1A, 1B, 2A, 2B)
+       ========================================================================= */
+    .subsection-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .subsection-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .subsection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-bottom: 0.95rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .subsection-header h3 {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .sub-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
+
+    .sub-tag-sky {
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .sub-tag-indigo {
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+    }
+
+    /* =========================================================================
+       2-COLUMN SHORTCUT REFERENCE GRID & TACTILE <kbd> KEYCAPS
+       ========================================================================= */
+    .hotkey-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .hotkey-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9rem;
+      padding: 0.68rem 0.9rem;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .hotkey-item.has-subitems {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.55rem;
+    }
+
+    .hotkey-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9rem;
+    }
+
+    .sub-shortcuts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding-top: 0.55rem;
+      padding-left: 0.85rem;
+      border-top: 1px dashed rgba(15, 23, 42, 0.12);
+      border-left: 2px solid var(--accent-sky);
+    }
+
+    .sub-shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .keys-wrap {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .plus-sep {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Tactile 3D-Bevel Monospace Keycap */
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid #cbd5e1;
+      border-bottom: 2.5px solid #94a3b8;
+      border-radius: 6px;
+      padding: 0.24rem 0.52rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      white-space: nowrap;
+    }
+
+    .action-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    .action-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* =========================================================================
+       HFSS ENGINEERING TIPS CARDS (2B)
+       ========================================================================= */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .tip-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.09);
+    }
+
+    .tip-card.tip-wide {
+      grid-column: 1 / -1;
+    }
+
+    .tip-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      min-width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .tip-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .tip-text strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.14rem 0.42rem;
+      border-radius: 5px;
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .menu-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.79rem;
+      font-weight: 600;
+      padding: 0.14rem 0.45rem;
+      border-radius: 5px;
+      background: #ffffff;
+      color: var(--text-primary);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* =========================================================================
+       FOOTER
+       ========================================================================= */
+    footer {
+      text-align: center;
+      padding: 1.85rem 1.5rem;
+      border-top: 1px solid var(--border-card);
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (MOBILE & TABLET)
+       ========================================================================= */
+    @media (max-width: 820px) {
+      .hotkey-grid,
+      .tips-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hotkey-item,
+      .hotkey-main-row,
+      .sub-shortcut-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+      }
+
+      .action-desc {
+        text-align: left;
+      }
+    }
+
+    /* =========================================================================
+       CLEAN PRINT / PDF SUPPORT
+       ========================================================================= */
+    @media print {
+      body {
+        background: #ffffff;
+        background-image: none;
+      }
+
+      .top-glow,
+      .top-header {
+        display: none;
+      }
+
+      .container {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .subsection-card,
+      .section-banner {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-glow" aria-hidden="true"></div>
+
+  <!-- Main Scrollable Reference Content -->
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1><span class="accent-gradient">Cadence Virtuoso &amp; HFSS</span> Hotkeys Reference</h1>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 1: CADENCE VIRTUOSO HOTKEYS (FIRST)
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="cadence-heading">
+      <div class="section-banner cadence-accent">
+        <div class="section-title-group">
+          <span class="section-num">01</span>
+          <h2 id="cadence-heading">Cadence Virtuoso Hotkeys</h2>
+        </div>
+        <span class="section-meta">Layout Editor &bull; Schematic &amp; Waveform Viewer</span>
+      </div>
+
+      <!-- 1A. Cadence Hotkeys - Layout -->
+      <article class="subsection-card" aria-labelledby="cadence-layout-heading">
+        <div class="subsection-header">
+          <h3 id="cadence-layout-heading">1A. Cadence Hotkeys &mdash; Layout</h3>
+          <span class="sub-tag sub-tag-sky">Virtuoso Layout Suite</span>
+        </div>
+
+        <div class="hotkey-grid">
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>r</kbd></span>
+            <span class="action-desc">Draw rectangle. Select layer first.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>m</kbd></span>
+            <span class="action-desc">Merge objects.</span>
+          </div>
+
+          <!-- Measurement Rule + Nested Ruler Shortcuts -->
+          <div class="hotkey-item has-subitems">
+            <div class="hotkey-main-row">
+              <span class="keys-wrap"><kbd>k</kbd></span>
+              <span class="action-desc">Measurement rule (ruler).</span>
+            </div>
+            <div class="sub-shortcuts">
+              <div class="sub-shortcut-row">
+                <span class="keys-wrap"><kbd>k</kbd><span class="plus-sep">+</span><kbd>right-click</kbd></span>
+                <span class="action-desc">Ruler options.</span>
+              </div>
+              <div class="sub-shortcut-row">
+                <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>k</kbd></span>
+                <span class="action-desc">Remove all rulers.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>o</kbd></span>
+            <span class="action-desc">Rotate objects.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>x</kbd></span>
+            <span class="action-desc">Descend into object.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>b</kbd></span>
+            <span class="action-desc">Ascend out of object.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>s</kbd></span>
+            <span class="action-desc">Stretch edge.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>scroll</kbd></span>
+            <span class="action-desc">Zoom in and out.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>scroll</kbd></span>
+            <span class="action-desc">Move up and down.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>scroll</kbd></span>
+            <span class="action-desc">Move left and right.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>a</kbd></span>
+            <span class="action-desc">Align.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>m</kbd></span>
+            <span class="action-desc">Move.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>c</kbd></span>
+            <span class="action-desc">Copy.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>p</kbd></span>
+            <span class="action-desc">Add path.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>p</kbd></span>
+            <span class="action-desc">Create polygon.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>f</kbd></span>
+            <span class="action-desc">Fit to screen.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>g</kbd></span>
+            <span class="action-desc">Toggle gravity.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>o</kbd></span>
+            <span class="action-desc">Create via.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>u</kbd></span>
+            <span class="action-desc">Undo.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>click</kbd></span>
+            <span class="action-desc">Select multiple instances.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>click</kbd></span>
+            <span class="action-desc">De-select.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>left-click and drag</kbd></span>
+            <span class="action-desc">Select objects.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>right-click and drag</kbd></span>
+            <span class="action-desc">Zoom in to region.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>center-click and drag</kbd></span>
+            <span class="action-desc">Drag view.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>f</kbd></span>
+            <span class="action-desc">Make instance layout visible.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>t</kbd></span>
+            <span class="action-desc">Tap/probe layers.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>f</kbd></span>
+            <span class="action-desc">Make instance layout invisible.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>u</kbd></span>
+            <span class="action-desc">Redo.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>p</kbd></span>
+            <span class="action-desc">Create pin.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>c</kbd></span>
+            <span class="action-desc">Cut/chop objects.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>q</kbd></span>
+            <span class="action-desc">Parameters.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>e</kbd></span>
+            <span class="action-desc">Display options.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>e</kbd></span>
+            <span class="action-desc">Layout editor options.</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1B. Cadence Hotkeys - Schematic -->
+      <article class="subsection-card" aria-labelledby="cadence-schematic-heading">
+        <div class="subsection-header">
+          <h3 id="cadence-schematic-heading">1B. Cadence Hotkeys &mdash; Schematic</h3>
+          <span class="sub-tag sub-tag-sky">Virtuoso Schematic &amp; ViVA Graph</span>
+        </div>
+
+        <div class="hotkey-grid">
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>f</kbd></span>
+            <span class="action-desc">Fit to screen.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>scroll</kbd></span>
+            <span class="action-desc">Move left and right.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>i</kbd></span>
+            <span class="action-desc">Insert instance from library.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>left-click and drag</kbd></span>
+            <span class="action-desc">Select objects.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>w</kbd></span>
+            <span class="action-desc">Add wire.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>right-click and drag</kbd></span>
+            <span class="action-desc">Zoom in to region.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>m</kbd></span>
+            <span class="action-desc">Move.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>c</kbd></span>
+            <span class="action-desc">Copy.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>center-click and drag</kbd></span>
+            <span class="action-desc">Drag view.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>e</kbd></span>
+            <span class="action-desc">Descend. Double click does the same.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>q</kbd></span>
+            <span class="action-desc">Edit parameters.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>l</kbd></span>
+            <span class="action-desc">Add label.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>u</kbd></span>
+            <span class="action-desc">Undo.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>e</kbd></span>
+            <span class="action-desc">Ascend.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>r</kbd></span>
+            <span class="action-desc">Rotate.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>u</kbd></span>
+            <span class="action-desc">Redo.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>x</kbd></span>
+            <span class="action-desc">Check and save. Cannot undo after this.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>scroll</kbd></span>
+            <span class="action-desc">Zoom in and out.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>scroll</kbd></span>
+            <span class="action-desc">Move up and down.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>shift</kbd><span class="plus-sep">+</span><kbd>click</kbd></span>
+            <span class="action-desc">Select multiple instances.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>click</kbd></span>
+            <span class="action-desc">De-select multiple instances.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>p</kbd></span>
+            <span class="action-desc">Add pin.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>v</kbd></span>
+            <span class="action-desc">Add vertical marker to graph.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>h</kbd></span>
+            <span class="action-desc">Add horizontal marker to graph.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>e</kbd></span>
+            <span class="action-desc">Delete all markers (in graph/waveform viewer).</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 2: HFSS HOTKEYS & TIPS (SECOND)
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="hfss-heading">
+      <div class="section-banner hfss-accent">
+        <div class="section-title-group">
+          <span class="section-num">02</span>
+          <h2 id="hfss-heading">HFSS Hotkeys &amp; Tips</h2>
+        </div>
+        <span class="section-meta">Ansys HFSS 3D Full-Wave EM</span>
+      </div>
+
+      <!-- 2A. HFSS Hotkeys -->
+      <article class="subsection-card" aria-labelledby="hfss-hotkeys-heading">
+        <div class="subsection-header">
+          <h3 id="hfss-hotkeys-heading">2A. HFSS Hotkeys</h3>
+          <span class="sub-tag sub-tag-indigo">3D Modeler Selection &amp; Navigation</span>
+        </div>
+
+        <div class="hotkey-grid">
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>f</kbd></span>
+            <span class="action-desc">Face selection.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>o</kbd></span>
+            <span class="action-desc">Object selection.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>e</kbd></span>
+            <span class="action-desc">Edge selection.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>b</kbd></span>
+            <span class="action-desc">Select object/face behind current selection.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>ctrl</kbd><span class="plus-sep">+</span><kbd>d</kbd></span>
+            <span class="action-desc">Fit all to screen.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>center mouse click and move</kbd></span>
+            <span class="action-desc">Rotate object.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>left click and drag box to left</kbd></span>
+            <span class="action-desc">Select all objects/faces/edges touching box.</span>
+          </div>
+
+          <div class="hotkey-item">
+            <span class="keys-wrap"><kbd>left click and drag box to right</kbd></span>
+            <span class="action-desc">Select all objects/faces/edges inside box.</span>
+          </div>
+
+          <div class="hotkey-item" style="grid-column: 1 / -1;">
+            <span class="keys-wrap"><kbd>X</kbd><span class="plus-sep">,</span><kbd>Y</kbd><span class="plus-sep">,</span><kbd>Z</kbd></span>
+            <span class="action-desc">During move/copy operations, holding down <strong>X</strong>, <strong>Y</strong> or <strong>Z</strong> keys will restrict movement along those axes.</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 2B. HFSS Tips -->
+      <article class="subsection-card" aria-labelledby="hfss-tips-heading">
+        <div class="subsection-header">
+          <h3 id="hfss-tips-heading">2B. HFSS Tips</h3>
+          <span class="sub-tag sub-tag-indigo">Setup, Meshing &amp; Automation Best Practices</span>
+        </div>
+
+        <div class="tips-grid">
+          <div class="tip-card">
+            <span class="tip-number">01</span>
+            <p class="tip-text">
+              In general use <strong>Driven Modal</strong> over <strong>Driven Terminal</strong> in Solution Type.
+            </p>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">02</span>
+            <p class="tip-text">
+              Set the <strong>right units</strong> before you start drawing.
+            </p>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">03</span>
+            <p class="tip-text">
+              <span class="menu-path">HFSS Design Setting &rarr; Enable material override</span>. This allows metals to overlap with dielectrics so it is very useful.
+            </p>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">04</span>
+            <p class="tip-text">
+              Set the <strong>right convergence parameters</strong> based on what you are interested in. S-parameters is default but not always optimal.
+            </p>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">05</span>
+            <p class="tip-text">
+              Global variables can be assigned by using a <span class="inline-code">$</span> sign before the variable. This variable appears in all designs. For example <span class="inline-code">$var_name</span>.
+            </p>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">06</span>
+            <p class="tip-text">
+              <span class="menu-path">Tools &rarr; Record Script to File</span> and <span class="menu-path">Run Script</span> are very useful tools for automation.
+            </p>
+          </div>
+
+          <div class="tip-card tip-wide">
+            <span class="tip-number">07</span>
+            <p class="tip-text">
+              <span class="menu-path">Right-Click &rarr; Create Open Region</span> is a fast way of making the radiation box.
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer>
+    RFIC &amp; EDA Lab Hub &bull; Static Light-Mode Hotkeys &amp; Simulation Reference
+  </footer>
+</body>
+</html>
