@@ -1188,43 +1188,7 @@
               </div>
             </div>
 
-            <!-- Interactive Pre-Simulation Verification Checklist -->
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 sm:p-5 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 class="text-sm font-bold text-slate-900">Pre-Simulation Readiness Checklist</h3>
-                  <p class="text-xs text-slate-500">Verify all 6 items before running production EM sweeps on RFIC layouts</p>
-                </div>
-                <span id="checklist-counter" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800">0 / 6 Verified</span>
-              </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span><code class="font-mono font-semibold">$EMXHOME</code> points to <code class="font-mono">&lt;EMX_INSTALL_DIR&gt;/EMX_25.10.000</code> in shell before Virtuoso launch.</span>
-                </label>
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span><code class="font-mono font-semibold">.cdsinit</code> loads <code class="font-mono">emxconfig.il</code> and sets <code class="font-mono">EMX_process_name</code> without CIW errors.</span>
-                </label>
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span><strong>Scaled / Unscaled</strong> X-section viewer renders <code class="font-mono">gpdk045_nominal.proc</code> layers cleanly.</span>
-                </label>
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span>Layout pins (<code class="font-mono">P1</code>, <code class="font-mono">P2</code>) match the exact pin names entered in <strong>Signals</strong>.</span>
-                </label>
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span>Active devices (MOSFETs/varactors) are excluded via <strong>Black boxing &rarr; Choose</strong> if simulating top-level interconnects.</span>
-                </label>
-                <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300">
-                  <input type="checkbox" onchange="updateChecklist()" class="emx-check mt-0.5 w-4 h-4 rounded text-indigo-600" />
-                  <span><strong>Create model &rarr; Start</strong> and <strong>Create view &rarr; Spar / Model</strong> executed to back-annotate schematic simulation.</span>
-                </label>
-              </div>
-            </div>
           </div>
         </section>
 
