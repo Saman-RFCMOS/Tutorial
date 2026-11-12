@@ -597,14 +597,14 @@
         artwork: "emx"
       },
       {
-        enabled: false,
-        title: "2.4 GHz Low-Noise Amplifier (LNA) Schematic-to-Layout Flow",
-        path: "./lna-design/",
-        category: "RFIC Design",
-        tags: ["SpectreRF", "S-Parameters", "NF", "gpdk045"],
+        enabled: true,
+        title: "Cadence Virtuoso & HFSS Hotkeys Reference",
+        path: "./Cadence_HFSS_HotKeys/",
+        category: "EDA Tools",
+        tags: ["Cadence", "Ansys", "HFSS", "Layout"],
         description:
-          "Design an inductively degenerated cascode LNA, optimize noise figure and input matching (S11), and co-simulate extracted EM passives.",
-        artwork: "lna"
+          "Essential keyboard shortcuts, mouse navigation controls, and practical 3D electromagnetic simulation tips for layout, schematic, and full-wave design workflows.",
+        artwork: "cadenceHFSS"
       },
       {
         enabled: false,
@@ -645,14 +645,56 @@
           <text x="210" y="88" text-anchor="middle" fill="url(#emxGrad)" font-family="'Inter', sans-serif" font-weight="800" font-size="30" letter-spacing="3">EMX</text>
           <text x="200" y="138" text-anchor="middle" fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="1.5">3D PLANAR EM SOLVER</text>
         </svg>`,
-      lna: `
+      cadenceHFSS: `
         <svg class="graphic" viewBox="0 0 400 156" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 78 H145" stroke="#38bdf8" stroke-width="2.5"/>
-          <polygon points="145,42 235,78 145,114" fill="rgba(56, 189, 248, 0.14)" stroke="#38bdf8" stroke-width="2.5"/>
-          <path d="M235 78 H380" stroke="#818cf8" stroke-width="2.5"/>
-          <path d="M35 78 Q 55 48, 75 78 T 115 78" stroke="#34d399" stroke-width="2" fill="none"/>
-          <path d="M265 78 Q 285 28, 305 78 T 345 78" stroke="#818cf8" stroke-width="2.5" fill="none"/>
-        </svg>`,
+  <defs>
+    <linearGradient id="cadHfssFrame" x1="30" y1="30" x2="370" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <linearGradient id="hfssAccent" x1="270" y1="80" x2="336" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Background: Orthogonal IC Layout Traces -->
+  <path d="M8 52 H22 V64 H32" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round" />
+  <path d="M4 75 H32" stroke="#38bdf8" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M12 98 H24 V86 H32" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round" />
+  <circle cx="8" cy="52" r="2.5" fill="#38bdf8" fill-opacity="0.6" />
+  <circle cx="12" cy="98" r="2.5" fill="#38bdf8" fill-opacity="0.6" />
+
+  <!-- Right Background: Radiating 3D EM Field Arcs -->
+  <path d="M368 75 H394" stroke="#818cf8" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M373 57 Q384 75 373 93" stroke="#818cf8" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round" fill="none" />
+  <path d="M381 47 Q396 75 381 103" stroke="#fbbf24" stroke-opacity="0.4" stroke-width="2" stroke-linecap="round" fill="none" />
+
+  <!-- Left Emblem Card: Cadence -->
+  <rect x="32" y="34" width="150" height="82" rx="12" fill="rgba(15, 23, 42, 0.88)" stroke="#38bdf8" stroke-width="1.8" />
+  <circle cx="66" cy="68" r="4.5" fill="#ef4444" />
+  <text x="115" y="74" text-anchor="middle" fill="#f8fafc" font-family="'Inter', sans-serif" font-weight="800" font-size="19" letter-spacing="0.4">cadence</text>
+  <rect x="76" y="80" width="66" height="2.5" rx="1.25" fill="#ef4444" />
+  <text x="107" y="99" text-anchor="middle" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" letter-spacing="1.2">VIRTUOSO</text>
+
+  <!-- Center Signal / Workflow Connector -->
+  <line x1="182" y1="75" x2="218" y2="75" stroke="url(#cadHfssFrame)" stroke-width="2" stroke-dasharray="3 3" />
+  <circle cx="200" cy="75" r="10" fill="rgba(15, 23, 42, 0.95)" stroke="#34d399" stroke-width="1.8" />
+  <path d="M196 75 H204 M200 71 V79" stroke="#34d399" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Right Emblem Card: HFSS -->
+  <rect x="218" y="34" width="150" height="82" rx="12" fill="rgba(15, 23, 42, 0.88)" stroke="#818cf8" stroke-width="1.8" />
+  <!-- 3D Tetrahedral Mesh Emblem -->
+  <polygon points="251,54 263,74 239,74" fill="rgba(251, 191, 36, 0.22)" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round" />
+  <line x1="251" y1="54" x2="251" y2="74" stroke="#fbbf24" stroke-width="1.2" stroke-opacity="0.75" />
+  <text x="305" y="75" text-anchor="middle" fill="#f8fafc" font-family="'Inter', sans-serif" font-weight="800" font-size="21" letter-spacing="1.5">HFSS</text>
+  <rect x="272" y="80" width="64" height="2.5" rx="1.25" fill="url(#hfssAccent)" />
+  <text x="293" y="99" text-anchor="middle" fill="#818cf8" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" letter-spacing="1.2">3D EM SOLVER</text>
+
+  <!-- Bottom Caption -->
+  <text x="200" y="138" text-anchor="middle" fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="1.5">CADENCE &amp; HFSS HOTKEYS</text>
+</svg>`,
       calibre: `
         <svg class="graphic" viewBox="0 0 400 156" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="125" y="34" width="66" height="88" rx="6" stroke="#38bdf8" stroke-width="2.2" fill="rgba(56,189,248,0.1)"/>
