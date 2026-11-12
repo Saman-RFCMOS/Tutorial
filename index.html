@@ -1,34 +1,893 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RFIC & EDA Interactive Tutorials</title>
+  <title>RFIC &amp; EDA Interactive Tutorials</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 820px; margin: 3rem auto; padding: 0 1.25rem; background: #0f172a; color: #f1f5f9; }
-    h1 { font-size: 1.75rem; margin-bottom: 0.4rem; }
-    p.sub { color: #94a3b8; margin-bottom: 2rem; }
-    .grid { display: grid; gap: 1rem; }
-    a.card { display: block; padding: 1.25rem 1.5rem; background: #1e293b; border: 1px solid #334155; border-radius: 10px; text-decoration: none; color: inherit; transition: border-color 0.15s, transform 0.15s; }
-    a.card:hover { border-color: #38bdf8; transform: translateY(-2px); }
-    .tag { display: inline-block; font-size: 0.75rem; padding: 0.15rem 0.55rem; border-radius: 999px; background: #0284c7; color: #fff; margin-bottom: 0.5rem; }
-    h2 { margin: 0.2rem 0 0.4rem; font-size: 1.15rem; color: #f8fafc; }
-    .desc { margin: 0; font-size: 0.92rem; color: #cbd5e1; }
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f1624;
+      --bg-card: rgba(17, 25, 40, 0.78);
+      --bg-card-hover: rgba(23, 34, 54, 0.92);
+      --bg-pill: rgba(56, 189, 248, 0.12);
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-strong: rgba(56, 189, 248, 0.38);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-secondary: #818cf8;
+      --accent-glow: rgba(56, 189, 248, 0.18);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --grid-color: rgba(148, 163, 184, 0.05);
+      --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: #ffffff;
+      --bg-pill: rgba(2, 132, 199, 0.08);
+      --border-subtle: rgba(15, 23, 42, 0.1);
+      --border-strong: rgba(2, 132, 199, 0.4);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-secondary: #4f46e5;
+      --accent-glow: rgba(2, 132, 199, 0.12);
+      --success: #059669;
+      --warning: #d97706;
+      --grid-color: rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 12px 28px -6px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      background-image:
+        linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Ambient Top Glow */
+    .ambient-glow {
+      position: fixed;
+      top: -180px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 420px;
+      background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      display: grid;
+      place-items: center;
+      color: #fff;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    /* Main Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 5rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 3.25rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      background: var(--bg-pill);
+      border: 1px solid var(--border-strong);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.25rem;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.1rem, 4.5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.08rem;
+      color: var(--text-secondary);
+      max-width: 620px;
+      margin: 0 auto 1.75rem;
+    }
+
+    .stats-bar {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .stat-item strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    /* Filter & Search Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .pill {
+      padding: 0.48rem 0.95rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 0.84rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .pill.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 270px;
+      flex: 0 1 320px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.58rem 2.4rem 0.58rem 2.4rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .kbd-hint {
+      position: absolute;
+      right: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0.12rem 0.42rem;
+      border-radius: 5px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
+
+    /* Tutorial Cards Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border-radius: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, background 0.25s ease;
+    }
+
+    /* Cursor Spotlight Effect */
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        var(--accent-glow),
+        transparent 45%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--border-strong);
+      background: var(--bg-card-hover);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card.coming-soon {
+      opacity: 0.78;
+      cursor: default;
+    }
+
+    .card.coming-soon:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Card Visual Banner */
+    .card-banner {
+      position: relative;
+      height: 148px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    [data-theme="light"] .card-banner {
+      background: linear-gradient(135deg, #e0f2fe, #eef2ff);
+    }
+
+    .card-banner svg.graphic {
+      width: 100%;
+      height: 100%;
+      opacity: 0.9;
+      transition: transform 0.4s ease;
+    }
+
+    .card:hover .card-banner svg.graphic {
+      transform: scale(1.04);
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      padding: 0.24rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(8px);
+      z-index: 2;
+    }
+
+    .status-live {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    [data-theme="light"] .status-live {
+      background: rgba(16, 185, 129, 0.15);
+      color: #047857;
+    }
+
+    .status-soon {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+
+    [data-theme="light"] .status-soon {
+      color: #b45309;
+    }
+
+    /* Card Content */
+    .card-body {
+      position: relative;
+      z-index: 2;
+      padding: 1.35rem 1.45rem 1.45rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      background: var(--bg-pill);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.35;
+      margin-bottom: 0.55rem;
+      color: var(--text-primary);
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      flex: 1;
+    }
+
+    .card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-bottom: 1.2rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .feature-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+    }
+
+    .meta-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .diff-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    .cta-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 600;
+      color: var(--accent);
+      transition: gap 0.2s ease;
+    }
+
+    .card:hover .cta-link {
+      gap: 0.6rem;
+    }
+
+    /* Empty Search State */
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 4rem 1.5rem;
+      border-radius: 16px;
+      background: var(--bg-card);
+      border: 1px dashed var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .empty-state h3 {
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 640px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        max-width: 100%;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>RFIC &amp; EDA Interactive Tutorials</h1>
-  <p class="sub">Hands-on guides, configuration builders, and interactive workflows.</p>
+  <div class="ambient-glow"></div>
 
-  <div class="grid">
-    <!-- Tutorial 1 -->
-    <a class="card" href="./emx-virtuoso-setup/">
-      <span class="tag">Cadence Virtuoso • EMX 25.10</span>
-      <h2>Cadence Virtuoso EMX Integration &amp; Simulation Guide</h2>
-      <p class="desc">Configure .cdsinit, link gpdk045 process stackups, inspect cross-sections, and simulate spiral inductors.</p>
-    </a>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="./" class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <rect x="9" y="9" width="6" height="6" />
+            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+          </svg>
+        </div>
+        <span>RFIC &amp; EDA Lab Hub</span>
+      </a>
 
-    <!-- Copy and paste another <a class="card"> block here whenever you add a new tutorial folder -->
-  </div>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle color theme">
+          <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+          <span id="themeLabel">Light</span>
+        </button>
+
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer" class="icon-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub Repo</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container">
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>Interactive Engineering Guides &amp; Labs</span>
+      </div>
+      <h1>Master <span class="gradient-text">RFIC Design &amp; EDA</span> Workflows</h1>
+      <p>
+        Step-by-step interactive tutorials featuring live configuration builders, simulated tool dialogs, presentation slides, and copy-ready Linux/SKILL scripts.
+      </p>
+      <div class="stats-bar">
+        <div class="stat-item"><strong id="liveCount">1</strong> Live Interactive Lab</div>
+        <div class="stat-item"><strong>Slide &amp; PDF</strong> Modes Built-In</div>
+        <div class="stat-item"><strong>gpdk045</strong> &amp; Cadence Workflows</div>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="controls" aria-label="Filter tutorials">
+      <div class="filter-pills" id="categoryPills"></div>
+
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Search tutorials, tools, PDKs..."
+          aria-label="Search tutorials"
+        />
+        <span class="kbd-hint">/</span>
+      </div>
+    </section>
+
+    <!-- Cards Grid -->
+    <section class="grid" id="tutorialGrid" aria-live="polite"></section>
+
+    <!-- Empty Search Fallback -->
+    <div class="empty-state" id="emptyState">
+      <h3>No matching tutorials found</h3>
+      <p>Try clearing your search term or switching back to the "All" category.</p>
+    </div>
+  </main>
+
+  <footer>
+    Built for RFIC &amp; Analog/Mixed-Signal Engineering Documentation &bull; Hosted on GitHub Pages
+  </footer>
+
+  <script>
+    // =========================================================================
+    // TUTORIAL REGISTRY
+    // To add a new tutorial: create a folder (e.g. ./lna-design/index.html)
+    // and add a new object to this array.
+    // =========================================================================
+    const TUTORIALS = [
+      {
+        title: "Cadence Virtuoso EMX Integration & Simulation Guide",
+        path: "./emx-virtuoso-setup/",
+        category: "EM Simulation",
+        status: "live", // "live" or "soon"
+        tags: ["EMX 25.10", "Virtuoso", "gpdk045", "SKILL"],
+        description:
+          "Configure .cdsinit in C-Shell, link gpdk045 process stackups, inspect cross-sections, and run 0.1–20 GHz S-parameter inductor simulations.",
+        features: ["Interactive Form", "Slide Deck", "PDF Export"],
+        difficulty: "Beginner",
+        diffColor: "#34d399",
+        duration: "15 min",
+        artwork: "inductor"
+      },
+      {
+        title: "2.4 GHz Low-Noise Amplifier (LNA) Schematic-to-Layout Flow",
+        path: "#",
+        category: "RFIC Design",
+        status: "soon",
+        tags: ["SpectreRF", "S-Parameters", "NF", "gpdk045"],
+        description:
+          "Design an inductively degenerated cascode LNA, optimize noise figure and input matching (S11), and co-simulate extracted EM passives.",
+        features: ["Smith Chart Lab", "Noise Analysis"],
+        difficulty: "Intermediate",
+        diffColor: "#fbbf24",
+        duration: "30 min",
+        artwork: "wave"
+      },
+      {
+        title: "Calibre DRC / LVS / PEX Post-Layout Verification Workflow",
+        path: "#",
+        category: "Verification",
+        status: "soon",
+        tags: ["Calibre", "DRC/LVS", "Parasitics"],
+        description:
+          "Set up rule decks inside Virtuoso, debug common density and antenna violations, and generate coupled RC netlists for post-layout simulation.",
+        features: ["Rule Checklist", "Debug Guide"],
+        difficulty: "Beginner",
+        diffColor: "#34d399",
+        duration: "20 min",
+        artwork: "grid"
+      }
+    ];
+
+    // Vector Artwork Templates for Card Headers
+    const ARTWORKS = {
+      inductor: `
+        <svg class="graphic" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="indGrad" x1="0" y1="0" x2="400" y2="150" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#818cf8" />
+            </linearGradient>
+          </defs>
+          <path d="M30 75 H135 V40 H265 V110 H150 V55 H250 V95 H165 V70 H235 V80 H370" stroke="url(#indGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="30" cy="75" r="5" fill="#38bdf8"/>
+          <circle cx="370" cy="80" r="5" fill="#818cf8"/>
+          <rect x="125" y="30" width="150" height="90" rx="8" stroke="#38bdf8" stroke-opacity="0.22" stroke-dasharray="5 5"/>
+        </svg>`,
+      wave: `
+        <svg class="graphic" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 95 Q 50 25, 100 95 T 200 95 T 300 95 T 400 95" stroke="#38bdf8" stroke-width="2.5" stroke-opacity="0.5"/>
+          <path d="M0 75 Q 50 135, 100 75 T 200 75 T 300 75 T 400 75" stroke="#818cf8" stroke-width="3"/>
+          <polygon points="175,45 235,75 175,105" fill="rgba(56, 189, 248, 0.16)" stroke="#38bdf8" stroke-width="2.5"/>
+        </svg>`,
+      grid: `
+        <svg class="graphic" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="110" y="30" width="75" height="90" rx="6" stroke="#38bdf8" stroke-width="2.2" fill="rgba(56,189,248,0.1)"/>
+          <rect x="215" y="30" width="75" height="90" rx="6" stroke="#818cf8" stroke-width="2.2" fill="rgba(129,140,248,0.1)"/>
+          <path d="M185 55 H215 M185 95 H215" stroke="#34d399" stroke-width="2.5"/>
+          <circle cx="147" cy="75" r="14" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="252" cy="75" r="14" stroke="#818cf8" stroke-width="2"/>
+        </svg>`
+    };
+
+    // State
+    let activeCategory = "All";
+    let searchQuery = "";
+
+    const gridEl = document.getElementById("tutorialGrid");
+    const pillsEl = document.getElementById("categoryPills");
+    const searchInput = document.getElementById("searchInput");
+    const emptyState = document.getElementById("emptyState");
+    const liveCountEl = document.getElementById("liveCount");
+
+    // Update live tutorial counter
+    liveCountEl.textContent = TUTORIALS.filter(t => t.status === "live").length;
+
+    // Render Category Pills
+    function renderPills() {
+      const categories = ["All", ...new Set(TUTORIALS.map(t => t.category))];
+      pillsEl.innerHTML = categories
+        .map(cat => {
+          const count = cat === "All"
+            ? TUTORIALS.length
+            : TUTORIALS.filter(t => t.category === cat).length;
+          const activeClass = cat === activeCategory ? "active" : "";
+          return `<button type="button" class="pill ${activeClass}" data-cat="${cat}">${cat} (${count})</button>`;
+        })
+        .join("");
+
+      pillsEl.querySelectorAll(".pill").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeCategory = btn.dataset.cat;
+          renderPills();
+          renderCards();
+        });
+      });
+    }
+
+    // Render Tutorial Cards
+    function renderCards() {
+      const q = searchQuery.trim().toLowerCase();
+      const filtered = TUTORIALS.filter(item => {
+        const matchesCat = activeCategory === "All" || item.category === activeCategory;
+        const matchesText =
+          !q ||
+          item.title.toLowerCase().includes(q) ||
+          item.description.toLowerCase().includes(q) ||
+          item.category.toLowerCase().includes(q) ||
+          item.tags.some(tag => tag.toLowerCase().includes(q));
+        return matchesCat && matchesText;
+      });
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = "";
+        emptyState.style.display = "block";
+        return;
+      }
+
+      emptyState.style.display = "none";
+      gridEl.innerHTML = filtered
+        .map(item => {
+          const isLive = item.status === "live";
+          const tagHtml = item.tags.map(t => `<span class="tag">${t}</span>`).join("");
+          const featHtml = item.features
+            .map(f => `<span class="feature-chip">&#10003; ${f}</span>`)
+            .join("");
+
+          return `
+            <a
+              href="${isLive ? item.path : "javascript:void(0)"}"
+              class="card ${isLive ? "" : "coming-soon"}"
+              ${isLive ? "" : 'aria-disabled="true" onclick="return false;"'}
+            >
+              <div class="card-banner">
+                ${ARTWORKS[item.artwork] || ARTWORKS.inductor}
+                <span class="status-badge ${isLive ? "status-live" : "status-soon"}">
+                  ${isLive ? "Interactive Lab" : "Coming Soon"}
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="card-tags">${tagHtml}</div>
+                <h2 class="card-title">${item.title}</h2>
+                <p class="card-desc">${item.description}</p>
+                <div class="card-features">${featHtml}</div>
+                <div class="card-footer">
+                  <div class="meta-info">
+                    <span><span class="diff-dot" style="background:${item.diffColor}"></span>${item.difficulty}</span>
+                    <span>&bull; ${item.duration}</span>
+                  </div>
+                  <span class="cta-link">
+                    ${isLive ? "Launch Tutorial &rarr;" : "In Progress"}
+                  </span>
+                </div>
+              </div>
+            </a>
+          `;
+        })
+        .join("");
+
+      attachSpotlightEffect();
+    }
+
+    // Mouse-tracking radial glow per card
+    function attachSpotlightEffect() {
+      document.querySelectorAll(".card").forEach(card => {
+        card.addEventListener("mousemove", e => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
+          card.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
+        });
+      });
+    }
+
+    // Search Input & "/" Keyboard Shortcut
+    searchInput.addEventListener("input", e => {
+      searchQuery = e.target.value;
+      renderCards();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "/" && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      } else if (e.key === "Escape" && document.activeElement === searchInput) {
+        searchInput.value = "";
+        searchQuery = "";
+        searchInput.blur();
+        renderCards();
+      }
+    });
+
+    // Dark / Light Theme Toggle
+    const themeToggle = document.getElementById("themeToggle");
+    const themeLabel = document.getElementById("themeLabel");
+    const savedTheme = localStorage.getItem("hub-theme") || "dark";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    themeLabel.textContent = savedTheme === "dark" ? "Light" : "Dark";
+
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("hub-theme", next);
+      themeLabel.textContent = next === "dark" ? "Light" : "Dark";
+    });
+
+    // Initialize
+    renderPills();
+    renderCards();
+  </script>
 </body>
 </html>
