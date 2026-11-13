@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Essential Linux &amp; EDA Server Commands</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================================
+       DESIGN TOKENS — LIGHT MODE ONLY (RFIC & EDA LAB HUB PALETTE)
+       ========================================================================= */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-cmd: #f1f5f9;
+      --bg-pill-sky: rgba(2, 132, 199, 0.09);
+      --bg-pill-indigo: rgba(79, 70, 229, 0.09);
+      --bg-pill-emerald: rgba(5, 150, 105, 0.09);
+      --border-card: rgba(15, 23, 42, 0.1);
+      --border-sky: rgba(2, 132, 199, 0.28);
+      --border-indigo: rgba(79, 70, 229, 0.28);
+      --border-emerald: rgba(5, 150, 105, 0.28);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-sky: #0284c7;
+      --accent-indigo: #4f46e5;
+      --accent-emerald: #059669;
+      --grid-line: rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 10px 26px -6px rgba(15, 23, 42, 0.07), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* 40px subtle engineering grid background */
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Ambient top radial highlight */
+    .top-glow {
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 920px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(2, 132, 199, 0.11) 0%, rgba(79, 70, 229, 0.05) 45%, transparent 72%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* =========================================================================
+       MINIMAL STATIC TOP HEADER BAR
+       ========================================================================= */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(248, 250, 252, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.42rem 0.85rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent-sky);
+      color: var(--accent-sky);
+    }
+
+    .header-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 0.32rem 0.78rem;
+      border-radius: 999px;
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+      letter-spacing: 0.01em;
+    }
+
+    /* =========================================================================
+       MAIN CONTAINER & HERO SECTION
+       ========================================================================= */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.75rem 1.5rem 4.5rem;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.36rem 0.95rem;
+      border-radius: 999px;
+      background: var(--bg-pill-sky);
+      border: 1px solid var(--border-sky);
+      color: var(--accent-sky);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo));
+    }
+
+    .hero h1 {
+      font-size: clamp(1.95rem, 4.2vw, 2.95rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.16;
+      color: var(--text-primary);
+      margin-bottom: 0.85rem;
+    }
+
+    .hero h1 .accent-gradient {
+      background: linear-gradient(135deg, var(--accent-sky) 0%, var(--accent-indigo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.02rem;
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* =========================================================================
+       NUMBERED SECTION HEADERS (01 - 04)
+       ========================================================================= */
+    .tool-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .tool-section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .section-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1.15rem 1.45rem;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-banner.accent-sky {
+      border-left: 4px solid var(--accent-sky);
+    }
+
+    .section-banner.accent-indigo {
+      border-left: 4px solid var(--accent-indigo);
+    }
+
+    .section-banner.accent-emerald {
+      border-left: 4px solid var(--accent-emerald);
+    }
+
+    .section-banner.accent-dual {
+      border-left: 4px solid var(--accent-sky);
+    }
+
+    .section-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.32rem 0.62rem;
+      border-radius: 8px;
+      color: #ffffff;
+    }
+
+    .accent-sky .section-num {
+      background: linear-gradient(135deg, var(--accent-sky), #0369a1);
+    }
+
+    .accent-indigo .section-num {
+      background: linear-gradient(135deg, var(--accent-indigo), #3730a3);
+    }
+
+    .accent-emerald .section-num {
+      background: linear-gradient(135deg, var(--accent-emerald), #047857);
+    }
+
+    .accent-dual .section-num {
+      background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo));
+    }
+
+    .section-banner h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .section-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      background: var(--bg-card-subtle);
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+    }
+
+    /* =========================================================================
+       SUBSECTION CARDS
+       ========================================================================= */
+    .subsection-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .subsection-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .subsection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-bottom: 0.95rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .subsection-header h3 {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .sub-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.58rem;
+      border-radius: 6px;
+    }
+
+    .sub-tag-sky {
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .sub-tag-indigo {
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+    }
+
+    .sub-tag-emerald {
+      background: var(--bg-pill-emerald);
+      color: var(--accent-emerald);
+      border: 1px solid var(--border-emerald);
+    }
+
+    /* =========================================================================
+       2-COLUMN COMMAND REFERENCE GRID & TACTILE COMMAND BADGES
+       ========================================================================= */
+    .cmd-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .cmd-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.55rem;
+      padding: 0.88rem 1rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .cmd-item.cmd-wide {
+      grid-column: 1 / -1;
+    }
+
+    .cmd-syntax-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .cmd-or {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0 0.15rem;
+    }
+
+    /* Tactile Monospace Command Badge */
+    kbd.cmd-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.38;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid #cbd5e1;
+      border-bottom: 2.5px solid #94a3b8;
+      border-radius: 7px;
+      padding: 0.3rem 0.62rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      word-break: break-word;
+    }
+
+    kbd.cmd-badge .arg {
+      color: var(--accent-sky);
+      font-weight: 600;
+    }
+
+    .accent-indigo-text {
+      color: var(--accent-indigo) !important;
+    }
+
+    .accent-emerald-text {
+      color: var(--accent-emerald) !important;
+    }
+
+    .cmd-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .cmd-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.12rem 0.4rem;
+      border-radius: 5px;
+      background: #ffffff;
+      color: var(--text-primary);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* =========================================================================
+       MULTI-LINE SHELL CONFIGURATION & DAEMON BLOCKS (CARD 4B)
+       ========================================================================= */
+    .license-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .license-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding: 1.05rem 1.15rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.09);
+    }
+
+    .license-block.block-wide {
+      grid-column: 1 / -1;
+    }
+
+    .license-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .license-block-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .shell-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.71rem;
+      font-weight: 600;
+      padding: 0.16rem 0.5rem;
+      border-radius: 5px;
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .shell-pill.indigo {
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border-color: var(--border-indigo);
+    }
+
+    .shell-pill.emerald {
+      background: var(--bg-pill-emerald);
+      color: var(--accent-emerald);
+      border-color: var(--border-emerald);
+    }
+
+    .snippet-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .snippet-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.55rem 0.72rem;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+    }
+
+    .snippet-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+      line-height: 1.45;
+    }
+
+    .snippet-code .var {
+      color: var(--accent-indigo);
+    }
+
+    .snippet-code .val {
+      color: var(--accent-sky);
+    }
+
+    .snippet-note {
+      font-size: 0.81rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* =========================================================================
+       FOOTER
+       ========================================================================= */
+    footer {
+      text-align: center;
+      padding: 1.85rem 1.5rem;
+      border-top: 1px solid var(--border-card);
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (MOBILE & TABLET)
+       ========================================================================= */
+    @media (max-width: 820px) {
+      .cmd-grid,
+      .license-groups {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =========================================================================
+       CLEAN PRINT / PDF SUPPORT
+       ========================================================================= */
+    @media print {
+      body {
+        background: #ffffff;
+        background-image: none;
+      }
+
+      .top-glow,
+      .top-header {
+        display: none;
+      }
+
+      .container {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .subsection-card,
+      .section-banner {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-glow" aria-hidden="true"></div>
+
+  <!-- Minimal Static Top Header Bar -->
+  <header class="top-header">
+    <div class="header-inner">
+      <a href="../" class="back-link">&larr; Back to RFIC &amp; EDA Lab Hub</a>
+      <span class="header-badge">Linux &amp; EDA CLI Reference</span>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Reference Content -->
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1><span class="accent-gradient">Essential Linux &amp; EDA Commands</span></h1>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 01: DIRECTORY & FILE NAVIGATION
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-nav-heading">
+      <div class="section-banner accent-sky">
+        <div class="section-title-group">
+          <span class="section-num">01</span>
+          <h2 id="sec-nav-heading">Directory &amp; File Navigation</h2>
+        </div>
+        <span class="section-meta">cd &bull; pwd &bull; mkdir &bull; ls</span>
+      </div>
+
+      <!-- Card 1A: Folder Navigation (cd & pwd) -->
+      <article class="subsection-card" aria-labelledby="card-1a-heading">
+        <div class="subsection-header">
+          <h3 id="card-1a-heading">1A. Folder Navigation (<span class="inline-code">cd</span> &amp; <span class="inline-code">pwd</span>)</h3>
+          <span class="sub-tag sub-tag-sky">Directory Traversal</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cd <span class="arg">&lt;folder&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Go into a specific folder (for example, <span class="inline-code">cd myProjects</span>).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cd ..</kbd>
+            </div>
+            <p class="cmd-desc">Come out of the current folder (move up one parent directory).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cd ../..</kbd>
+            </div>
+            <p class="cmd-desc">Move up two directory levels at once.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cd ~</kbd>
+              <span class="cmd-or">or</span>
+              <kbd class="cmd-badge">cd</kbd>
+            </div>
+            <p class="cmd-desc">Return directly to your home directory.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cd -</kbd>
+            </div>
+            <p class="cmd-desc">Switch back to the previous working directory.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">pwd</kbd>
+            </div>
+            <p class="cmd-desc">Print working directory (display full path of your current location).</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 1B: Creating & Listing Directories (mkdir & ls) -->
+      <article class="subsection-card" aria-labelledby="card-1b-heading">
+        <div class="subsection-header">
+          <h3 id="card-1b-heading">1B. Creating &amp; Listing Directories (<span class="inline-code">mkdir</span> &amp; <span class="inline-code">ls</span>)</h3>
+          <span class="sub-tag sub-tag-sky">Folder Creation &amp; Inspection</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">mkdir <span class="arg">&lt;dir_name&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Make a new directory in the current folder.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">mkdir -p <span class="arg">&lt;dir1&gt;/&lt;dir2&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Create nested parent and child directories together in one command.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls</kbd>
+            </div>
+            <p class="cmd-desc">List visible files and folders in the current directory.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -la</kbd>
+            </div>
+            <p class="cmd-desc">List all files (including hidden dotfiles like <span class="inline-code">.cdsinit</span>, <span class="inline-code">.cshrc</span>, <span class="inline-code">.bashrc</span>) with permissions, owner, size, and timestamp.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -lh</kbd>
+            </div>
+            <p class="cmd-desc">List files with human-readable sizes (<span class="inline-code">KB</span>, <span class="inline-code">MB</span>, <span class="inline-code">GB</span>).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -lt</kbd>
+            </div>
+            <p class="cmd-desc">List files sorted by most recently modified first.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 02: CREATING, EDITING, COPYING, MOVING & DELETING FILES
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-files-heading">
+      <div class="section-banner accent-indigo">
+        <div class="section-title-group">
+          <span class="section-num">02</span>
+          <h2 id="sec-files-heading">Creating, Editing, Copying, Moving &amp; Deleting Files</h2>
+        </div>
+        <span class="section-meta">touch &bull; gedit &bull; nano &bull; vi &bull; cp &bull; mv &bull; rm</span>
+      </div>
+
+      <!-- Card 2A: Create, Edit & View Files -->
+      <article class="subsection-card" aria-labelledby="card-2a-heading">
+        <div class="subsection-header">
+          <h3 id="card-2a-heading">2A. Create, Edit &amp; View Files</h3>
+          <span class="sub-tag sub-tag-indigo">Editors &amp; Log Inspection</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">touch <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Create a new empty file (or update the modification timestamp of an existing file).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">gedit <span class="arg accent-indigo-text">&lt;filename&gt;</span> &amp;</kbd>
+            </div>
+            <p class="cmd-desc">Open file in the graphical text editor in the background (<span class="inline-code">&amp;</span> keeps your terminal usable).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">nano <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Edit file in a beginner-friendly terminal editor (<span class="inline-code">Ctrl+O</span> to save, <span class="inline-code">Ctrl+X</span> to exit).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">vi <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Edit file in terminal (<span class="inline-code">i</span> to insert text, <span class="inline-code">Esc</span> then <span class="inline-code">:wq</span> to save &amp; quit, <span class="inline-code">:q!</span> to quit without saving).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cat <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Print the entire file contents directly in the terminal window.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">head -n 30 <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+              <span class="cmd-or">/</span>
+              <kbd class="cmd-badge">tail -f <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">View the first 30 lines, or follow a live simulation/solver log file in real time.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2B: Copy, Move, Rename & Delete -->
+      <article class="subsection-card" aria-labelledby="card-2b-heading">
+        <div class="subsection-header">
+          <h3 id="card-2b-heading">2B. Copy, Move, Rename &amp; Delete</h3>
+          <span class="sub-tag sub-tag-indigo">File &amp; Directory Operations</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cp <span class="arg accent-indigo-text">&lt;source_file&gt; &lt;dest_file&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Copy a file (for example, <span class="inline-code">cp .cdsinit .cdsinit.bak</span>).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cp -r <span class="arg accent-indigo-text">&lt;source_dir&gt; &lt;dest_dir&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Copy an entire directory and all of its subdirectories recursively.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">mv <span class="arg accent-indigo-text">&lt;old_name&gt; &lt;new_name&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Move a file or folder to another path, or rename it in place.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">rm <span class="arg accent-indigo-text">&lt;filename&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Delete a file permanently (use <span class="inline-code">rm -i &lt;filename&gt;</span> to prompt for confirmation).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">rmdir <span class="arg accent-indigo-text">&lt;empty_dir&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Delete an empty directory safely.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">rm -rf <span class="arg accent-indigo-text">&lt;dir_name&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Force-delete a directory and everything inside it recursively (always double-check the path before running).</p>
+          </div>
+
+          <div class="cmd-item cmd-wide">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">find . -name <span class="arg accent-indigo-text">"&lt;pattern&gt;"</span></kbd>
+            </div>
+            <p class="cmd-desc">Search recursively for files matching a pattern (for example, <span class="inline-code">find . -name "*.proc"</span> or <span class="inline-code">find . -name "cds.lib"</span>).</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 03: SERVER RESOURCES — CPU, RAM, ACTIVE USERS & RUNNING TIME
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-server-heading">
+      <div class="section-banner accent-emerald">
+        <div class="section-title-group">
+          <span class="section-num">03</span>
+          <h2 id="sec-server-heading">Server Resources &mdash; CPU, RAM, Active Users &amp; Running Time</h2>
+        </div>
+        <span class="section-meta">uptime &bull; w &bull; top &bull; free &bull; lscpu &bull; kill</span>
+      </div>
+
+      <!-- Card 3A: Active Users & Server Running Time -->
+      <article class="subsection-card" aria-labelledby="card-3a-heading">
+        <div class="subsection-header">
+          <h3 id="card-3a-heading">3A. Active Users &amp; Server Running Time</h3>
+          <span class="sub-tag sub-tag-emerald">Server Load &amp; Session Activity</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">uptime</kbd>
+            </div>
+            <p class="cmd-desc">Show current server time, total running time (uptime), number of logged-in users, and 1-, 5-, and 15-minute CPU load averages.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">w</kbd>
+            </div>
+            <p class="cmd-desc">Display all active logged-in users, their login terminal, idle duration, and currently executing command or EDA tool.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">who</kbd>
+            </div>
+            <p class="cmd-desc">List currently logged-in usernames, terminal sessions, and login start times.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">last -n 10</kbd>
+            </div>
+            <p class="cmd-desc">Show the 10 most recent user logins and server reboot history.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3B: CPU, RAM, Disk & Process Monitoring -->
+      <article class="subsection-card" aria-labelledby="card-3b-heading">
+        <div class="subsection-header">
+          <h3 id="card-3b-heading">3B. CPU, RAM, Disk &amp; Process Monitoring</h3>
+          <span class="sub-tag sub-tag-emerald">Hardware &amp; Simulation Job Control</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">top</kbd>
+            </div>
+            <p class="cmd-desc">Live monitor of CPU %, RAM usage, and active jobs (<span class="inline-code">P</span> sorts by CPU, <span class="inline-code">M</span> sorts by RAM, <span class="inline-code">q</span> quits).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">htop</kbd>
+            </div>
+            <p class="cmd-desc">Visual per-core CPU bars and memory usage monitor (if installed on the server).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">free -h</kbd>
+            </div>
+            <p class="cmd-desc">Display total, used, and available system RAM and swap memory in human-readable <span class="inline-code">GB</span> / <span class="inline-code">MB</span>.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">lscpu</kbd>
+              <span class="cmd-or">or</span>
+              <kbd class="cmd-badge">nproc</kbd>
+            </div>
+            <p class="cmd-desc">Check server CPU architecture and total available processor cores for parallel EMX, Spectre, or ADS simulations.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">df -h</kbd>
+              <span class="cmd-or">/</span>
+              <kbd class="cmd-badge">du -sh *</kbd>
+            </div>
+            <p class="cmd-desc">Check overall server disk free space (<span class="inline-code">df -h</span>) and individual folder sizes in the current directory (<span class="inline-code">du -sh *</span>).</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ps -u $USER</kbd>
+              <span class="cmd-or">/</span>
+              <kbd class="cmd-badge">kill -9 <span class="arg accent-emerald-text">&lt;PID&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">List your active processes and terminate a frozen job using its Process ID (<span class="inline-code">&lt;PID&gt;</span>).</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 04: EDA LICENSE MANAGEMENT (CADENCE, ADS, HFSS, CALIBRE)
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-lic-heading">
+      <div class="section-banner accent-dual">
+        <div class="section-title-group">
+          <span class="section-num">04</span>
+          <h2 id="sec-lic-heading">EDA License Management (Cadence, ADS, HFSS, Calibre)</h2>
+        </div>
+        <span class="section-meta">lmstat &bull; setenv / export &bull; lmgrd &bull; lmreread</span>
+      </div>
+
+      <!-- Card 4A: Check Active Licenses & Server Status (lmstat) -->
+      <article class="subsection-card" aria-labelledby="card-4a-heading">
+        <div class="subsection-header">
+          <h3 id="card-4a-heading">4A. Check Active Licenses &amp; Server Status (<span class="inline-code">lmstat</span>)</h3>
+          <span class="sub-tag sub-tag-sky">FlexNet License Queries</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">lmutil lmstat -a -c <span class="arg">&lt;port&gt;@&lt;license-server&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Query the license server to view all active license daemons, total seats, and currently checked-out features.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">lmutil lmstat -a | grep -iE <span class="arg">"virtuoso|emx|ads|spectre"</span></kbd>
+            </div>
+            <p class="cmd-desc">Filter active license usage for specific Cadence, EMX, or Keysight ADS features and see which user holds each seat.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">lmutil lmstat -c <span class="arg">&lt;port&gt;@&lt;license-server&gt;</span></kbd>
+            </div>
+            <p class="cmd-desc">Quickly verify whether the FlexNet license server daemon is up and reachable from your machine.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">env | grep -i LIC</kbd>
+            </div>
+            <p class="cmd-desc">Check which license server variables (<span class="inline-code">CDS_LIC_FILE</span>, <span class="inline-code">LM_LICENSE_FILE</span>, <span class="inline-code">AGILEESOFD_LICENSE_FILE</span>) are currently loaded in your shell.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4B: Change, Run & Manage Licenses (setenv / export / lmgrd) -->
+      <article class="subsection-card" aria-labelledby="card-4b-heading">
+        <div class="subsection-header">
+          <h3 id="card-4b-heading">4B. Change, Run &amp; Manage Licenses (<span class="inline-code">setenv</span> / <span class="inline-code">export</span> / <span class="inline-code">lmgrd</span>)</h3>
+          <span class="sub-tag sub-tag-indigo">Shell Configuration &amp; Daemon Control</span>
+        </div>
+
+        <div class="license-groups">
+          <!-- Group 1: Change License in C-Shell -->
+          <div class="license-block">
+            <div class="license-block-header">
+              <span class="license-block-title">Change License in C-Shell</span>
+              <span class="shell-pill">~/.cshrc</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <code class="snippet-code">setenv <span class="var">CDS_LIC_FILE</span> <span class="val">5280@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set Cadence Virtuoso, EMX &amp; Spectre license server.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">setenv <span class="var">AGILEESOFD_LICENSE_FILE</span> <span class="val">27000@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set Keysight ADS license server.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">setenv <span class="var">LM_LICENSE_FILE</span> <span class="val">27000@&lt;license-server&gt;:5280@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set multi-tool FlexNet license search path (colon-separated).</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 2: Change License in Bash -->
+          <div class="license-block">
+            <div class="license-block-header">
+              <span class="license-block-title">Change License in Bash</span>
+              <span class="shell-pill indigo">~/.bashrc</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <code class="snippet-code">export <span class="var">CDS_LIC_FILE</span>=<span class="val">5280@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set Cadence Virtuoso, EMX &amp; Spectre license server.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">export <span class="var">AGILEESOFD_LICENSE_FILE</span>=<span class="val">27000@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set Keysight ADS license server.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">export <span class="var">LM_LICENSE_FILE</span>=<span class="val">27000@&lt;license-server&gt;:5280@&lt;license-server&gt;</span></code>
+                <span class="snippet-note">Set multi-tool FlexNet license search path (colon-separated).</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 3: Apply Updated License Settings -->
+          <div class="license-block block-wide">
+            <div class="license-block-header">
+              <span class="license-block-title">Apply Updated License Settings</span>
+              <span class="shell-pill emerald">Reload Shell Config</span>
+            </div>
+            <div class="cmd-grid">
+              <div class="snippet-row">
+                <code class="snippet-code">source <span class="val">~/.cshrc</span></code>
+                <span class="snippet-note">Reload C-Shell (<span class="inline-code">csh</span> / <span class="inline-code">tcsh</span>) configuration immediately without logging out.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">source <span class="val">~/.bashrc</span></code>
+                <span class="snippet-note">Reload Bash (<span class="inline-code">bash</span>) configuration immediately without logging out.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 4: Run / Reread / Release License Daemon -->
+          <div class="license-block block-wide">
+            <div class="license-block-header">
+              <span class="license-block-title">Run, Reread &amp; Release License Daemon</span>
+              <span class="shell-pill indigo">Admin &amp; Recovery</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <code class="snippet-code">lmgrd -c <span class="val">/path/to/license.dat</span> -l <span class="val">/path/to/license.log</span></code>
+                <span class="snippet-note">Start the FlexNet license server daemon and write diagnostic output to a log file.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">lmutil lmreread -c <span class="val">/path/to/license.dat</span></code>
+                <span class="snippet-note">Reload an updated license file without stopping active user sessions.</span>
+              </div>
+              <div class="snippet-row">
+                <code class="snippet-code">lmutil lmremove -c <span class="val">&lt;port&gt;@&lt;license-server&gt; &lt;feature&gt; &lt;user&gt; &lt;host&gt; &lt;display&gt;</span></code>
+                <span class="snippet-note">Reclaim a stuck license seat after an unexpected EDA tool crash (obtain <span class="inline-code">&lt;user&gt;</span>, <span class="inline-code">&lt;host&gt;</span>, and <span class="inline-code">&lt;display&gt;</span> from <span class="inline-code">lmstat -a</span>).</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer>
+    RFIC &amp; EDA Lab Hub &bull; Saman_RFCMOS GitHub
+  </footer>
+</body>
+</html>
