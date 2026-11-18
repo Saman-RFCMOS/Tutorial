@@ -624,7 +624,7 @@
         tags: ["Linux", "Server", "License", "Command"],
         description:
           "Practical command-line reference for Linux, Cadence, ADS, HFSS",
-        artwork: "simens"
+        artwork: "calibre"
       }
     ];
 
@@ -868,20 +868,20 @@
       }
     });
 
-    // Dark / Light Theme Toggle
-    const themeToggle = document.getElementById("themeToggle");
-    const themeLabel = document.getElementById("themeLabel");
-    const savedTheme = localStorage.getItem("hub-theme") || "dark";
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    themeLabel.textContent = savedTheme === "dark" ? "Light" : "Dark";
+   // Dark / Light Theme Toggle
+const themeToggle = document.getElementById("themeToggle");
+const themeLabel = document.getElementById("themeLabel");
+const savedTheme = localStorage.getItem("hub-theme") || "light";
+document.documentElement.setAttribute("data-theme", savedTheme);
+themeLabel.textContent = savedTheme === "dark" ? "Light" : "Dark";
 
-    themeToggle.addEventListener("click", () => {
-      const current = document.documentElement.getAttribute("data-theme");
-      const next = current === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      localStorage.setItem("hub-theme", next);
-      themeLabel.textContent = next === "dark" ? "Light" : "Dark";
-    });
+themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("hub-theme", next);
+  themeLabel.textContent = next === "dark" ? "Light" : "Dark";
+});
 
     // Initialize
     renderPills();
