@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrating Calibre with Cadence Virtuoso (C-Shell Guide)</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================================
+       DESIGN TOKENS — LIGHT MODE ONLY (RFIC & EDA LAB HUB PALETTE)
+       ========================================================================= */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-cmd: #f1f5f9;
+      --bg-pill-sky: rgba(2, 132, 199, 0.09);
+      --bg-pill-indigo: rgba(79, 70, 229, 0.09);
+      --bg-pill-emerald: rgba(5, 150, 105, 0.09);
+      --border-card: rgba(15, 23, 42, 0.1);
+      --border-sky: rgba(2, 132, 199, 0.28);
+      --border-indigo: rgba(79, 70, 229, 0.28);
+      --border-emerald: rgba(5, 150, 105, 0.28);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-sky: #0284c7;
+      --accent-indigo: #4f46e5;
+      --accent-emerald: #059669;
+      --grid-line: rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 10px 26px -6px rgba(15, 23, 42, 0.07), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* 40px subtle engineering grid background */
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Ambient top radial highlight */
+    .top-glow {
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 920px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(2, 132, 199, 0.11) 0%, rgba(79, 70, 229, 0.05) 45%, transparent 72%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* =========================================================================
+       MINIMAL STATIC TOP HEADER BAR
+       ========================================================================= */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(248, 250, 252, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.42rem 0.85rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent-sky);
+      color: var(--accent-sky);
+    }
+
+    .header-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 0.32rem 0.78rem;
+      border-radius: 999px;
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+      letter-spacing: 0.01em;
+    }
+
+    /* =========================================================================
+       MAIN CONTAINER & HERO SECTION
+       ========================================================================= */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.75rem 1.5rem 4.5rem;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 820px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.36rem 0.95rem;
+      border-radius: 999px;
+      background: var(--bg-pill-sky);
+      border: 1px solid var(--border-sky);
+      color: var(--accent-sky);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo));
+    }
+
+    .hero h1 {
+      font-size: clamp(1.95rem, 4.2vw, 2.95rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.16;
+      color: var(--text-primary);
+      margin-bottom: 0.85rem;
+    }
+
+    .hero h1 .accent-gradient {
+      background: linear-gradient(135deg, var(--accent-sky) 0%, var(--accent-indigo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.02rem;
+      color: var(--text-secondary);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* =========================================================================
+       NUMBERED SECTION HEADERS (01 - 04)
+       ========================================================================= */
+    .tool-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .tool-section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .section-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1.15rem 1.45rem;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-banner.accent-sky {
+      border-left: 4px solid var(--accent-sky);
+    }
+
+    .section-banner.accent-indigo {
+      border-left: 4px solid var(--accent-indigo);
+    }
+
+    .section-banner.accent-emerald {
+      border-left: 4px solid var(--accent-emerald);
+    }
+
+    .section-banner.accent-dual {
+      border-left: 4px solid var(--accent-sky);
+    }
+
+    .section-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.32rem 0.62rem;
+      border-radius: 8px;
+      color: #ffffff;
+    }
+
+    .accent-sky .section-num {
+      background: linear-gradient(135deg, var(--accent-sky), #0369a1);
+    }
+
+    .accent-indigo .section-num {
+      background: linear-gradient(135deg, var(--accent-indigo), #3730a3);
+    }
+
+    .accent-emerald .section-num {
+      background: linear-gradient(135deg, var(--accent-emerald), #047857);
+    }
+
+    .accent-dual .section-num {
+      background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo));
+    }
+
+    .section-banner h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .section-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      background: var(--bg-card-subtle);
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+    }
+
+    /* =========================================================================
+       SUBSECTION CARDS
+       ========================================================================= */
+    .subsection-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .subsection-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .subsection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-bottom: 0.95rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .subsection-header h3 {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .sub-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.58rem;
+      border-radius: 6px;
+    }
+
+    .sub-tag-sky {
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .sub-tag-indigo {
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-indigo);
+    }
+
+    .sub-tag-emerald {
+      background: var(--bg-pill-emerald);
+      color: var(--accent-emerald);
+      border: 1px solid var(--border-emerald);
+    }
+
+    /* =========================================================================
+       2-COLUMN COMMAND REFERENCE GRID & TACTILE COMMAND BADGES
+       ========================================================================= */
+    .cmd-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .cmd-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.55rem;
+      padding: 0.88rem 1rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .cmd-item.cmd-wide {
+      grid-column: 1 / -1;
+    }
+
+    .cmd-syntax-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .cmd-or {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0 0.15rem;
+    }
+
+    /* Tactile Monospace Command Badge */
+    kbd.cmd-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.38;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid #cbd5e1;
+      border-bottom: 2.5px solid #94a3b8;
+      border-radius: 7px;
+      padding: 0.3rem 0.62rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      word-break: break-word;
+    }
+
+    kbd.cmd-badge .arg {
+      color: var(--accent-sky);
+      font-weight: 600;
+    }
+
+    .accent-indigo-text {
+      color: var(--accent-indigo) !important;
+    }
+
+    .accent-emerald-text {
+      color: var(--accent-emerald) !important;
+    }
+
+    .cmd-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .cmd-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.12rem 0.4rem;
+      border-radius: 5px;
+      background: #ffffff;
+      color: var(--text-primary);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* =========================================================================
+       MULTI-LINE SHELL CONFIGURATION & FILE BLOCKS
+       ========================================================================= */
+    .license-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .license-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding: 1.05rem 1.15rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.09);
+    }
+
+    .license-block.block-wide {
+      grid-column: 1 / -1;
+    }
+
+    .license-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .license-block-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .shell-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.71rem;
+      font-weight: 600;
+      padding: 0.16rem 0.5rem;
+      border-radius: 5px;
+      background: var(--bg-pill-sky);
+      color: var(--accent-sky);
+      border: 1px solid var(--border-sky);
+    }
+
+    .shell-pill.indigo {
+      background: var(--bg-pill-indigo);
+      color: var(--accent-indigo);
+      border-color: var(--border-indigo);
+    }
+
+    .shell-pill.emerald {
+      background: var(--bg-pill-emerald);
+      color: var(--accent-emerald);
+      border-color: var(--border-emerald);
+    }
+
+    .snippet-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .snippet-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding: 0.65rem 0.82rem;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+    }
+
+    .snippet-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .snippet-code pre {
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 500;
+      white-space: pre-wrap;
+      margin: 0;
+      line-height: 1.52;
+    }
+
+    .snippet-code .var {
+      color: var(--accent-indigo);
+      font-weight: 600;
+    }
+
+    .snippet-code .val {
+      color: var(--accent-sky);
+      font-weight: 600;
+    }
+
+    .snippet-code .ok {
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }
+
+    .snippet-code .cmt {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .snippet-note {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.48;
+    }
+
+    /* =========================================================================
+       FOOTER
+       ========================================================================= */
+    footer {
+      text-align: center;
+      padding: 1.85rem 1.5rem;
+      border-top: 1px solid var(--border-card);
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (MOBILE & TABLET)
+       ========================================================================= */
+    @media (max-width: 820px) {
+      .cmd-grid,
+      .license-groups {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =========================================================================
+       CLEAN PRINT / PDF SUPPORT
+       ========================================================================= */
+    @media print {
+      body {
+        background: #ffffff;
+        background-image: none;
+      }
+
+      .top-glow,
+      .top-header {
+        display: none;
+      }
+
+      .container {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .subsection-card,
+      .section-banner {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-glow" aria-hidden="true"></div>
+
+  <!-- Minimal Static Top Header Bar -->
+  <header class="top-header">
+    <div class="header-inner">
+      <a href="../" class="back-link">&larr; Back to RFIC &amp; EDA Lab Hub</a>
+      <span class="header-badge">Virtuoso IC25.1 &amp; Calibre Setup</span>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Tutorial Content -->
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="hero-dot" aria-hidden="true"></span>
+        <span>Cadence Virtuoso Studio &amp; Siemens Calibre Integration</span>
+      </div>
+      <h1><span class="accent-gradient">Adding Calibre to Cadence Virtuoso</span></h1>
+      <p>
+        End-to-end C-Shell (<span class="inline-code">csh</span>) tutorial for locating your Calibre installation, verifying shell variables, safely appending the Calibre SKILL interface (<span class="inline-code">calibre.skl</span>) to <span class="inline-code">.cdsinit</span> alongside existing EMX/PDK tools, and confirming startup in Virtuoso IC25.1.
+      </p>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 01: LOCATE CALIBRE & VERIFY C-SHELL ENVIRONMENT
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-locate-heading">
+      <div class="section-banner accent-sky">
+        <div class="section-title-group">
+          <span class="section-num">01</span>
+          <h2 id="sec-locate-heading">Locate Calibre &amp; Verify C-Shell Environment</h2>
+        </div>
+        <span class="section-meta">env &bull; find &bull; which &bull; ~/.cshrc</span>
+      </div>
+
+      <!-- Card 1A: Discover Installation Path & Pre-Configured Variables -->
+      <article class="subsection-card" aria-labelledby="card-1a-heading">
+        <div class="subsection-header">
+          <h3 id="card-1a-heading">1A. Check Existing Environment &amp; Locate Binary</h3>
+          <span class="sub-tag sub-tag-sky">Path Discovery</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item cmd-wide">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">env | grep -iE <span class="arg">"calibre|mgc|mentor|siemens"</span></kbd>
+            </div>
+            <p class="cmd-desc">
+              Check if your lab administrator already configured <span class="inline-code">CALIBRE_HOME</span>, <span class="inline-code">MGC_HOME</span>, and <span class="inline-code">PATH</span> globally. If both variables appear (for example, <span class="inline-code">CALIBRE_HOME=/cad/mentor/calibre/aok_cal_2026.1_35.25</span>), you can skip <span class="inline-code">~/.cshrc</span> edits and jump straight to <strong>Section 02</strong>.
+            </p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -d /cad/* /opt/* /tools/* /eda/* 2&gt;/dev/null | grep -iE <span class="arg">"calibre|mgc|mentor|siemens"</span></kbd>
+            </div>
+            <p class="cmd-desc">Scan standard EDA server mount points for Calibre installation folders if environment variables are empty.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">find / -name <span class="arg">"calibre"</span> -type f -executable 2&gt;/dev/null</kbd>
+            </div>
+            <p class="cmd-desc">Search the filesystem directly for the <span class="inline-code">calibre</span> binary. The root folder immediately above <span class="inline-code">/bin/calibre</span> is your <span class="inline-code">CALIBRE_HOME</span>.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">which calibre</kbd>
+            </div>
+            <p class="cmd-desc">Confirm which <span class="inline-code">calibre</span> executable resolves first in your active C-Shell <span class="inline-code">PATH</span>.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">calibre -version</kbd>
+            </div>
+            <p class="cmd-desc">Verify the installed release version (use Calibre <strong>2024.3 or newer</strong>—such as <strong>2026.1</strong>—for clean menu integration with Virtuoso <strong>IC25.1</strong>).</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 1B: Manual C-Shell Setup (Only if not pre-configured) -->
+      <article class="subsection-card" aria-labelledby="card-1b-heading">
+        <div class="subsection-header">
+          <h3 id="card-1b-heading">1B. Manual C-Shell Configuration (<span class="inline-code">~/.cshrc</span>)</h3>
+          <span class="sub-tag sub-tag-sky">Only If Variables Are Missing</span>
+        </div>
+
+        <div class="license-groups">
+          <div class="license-block block-wide">
+            <div class="license-block-header">
+              <span class="license-block-title">Add Calibre Root &amp; License Server to ~/.cshrc</span>
+              <span class="shell-pill">csh / tcsh</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <div class="snippet-code"><pre><span class="cmt"># Calibre Environment Setup (replace path with your root directory from Step 1A)</span>
+<span class="var">setenv</span> CALIBRE_HOME <span class="val">/cad/mentor/calibre/aok_cal_2026.1_35.25</span>
+<span class="var">setenv</span> MGC_HOME <span class="val">$CALIBRE_HOME</span>
+<span class="var">set</span> path = (<span class="val">$CALIBRE_HOME/bin</span> $path)
+
+<span class="cmt"># License Server (uncomment only if not already set in a shared lab script)</span>
+<span class="cmt"># setenv SALT_LICENSE_SERVER 1717@your_license_server</span>
+<span class="cmt"># setenv MGLS_LICENSE_FILE 1717@your_license_server</span></pre></div>
+                <span class="snippet-note">After saving <span class="inline-code">~/.cshrc</span>, reload your shell with <span class="inline-code">source ~/.cshrc</span> before launching Virtuoso.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 02: INSPECT & BACK UP CADENCE STARTUP FILE (.cdsinit)
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-inspect-heading">
+      <div class="section-banner accent-indigo">
+        <div class="section-title-group">
+          <span class="section-num">02</span>
+          <h2 id="sec-inspect-heading">Inspect &amp; Back Up Cadence Startup File (<span class="inline-code">.cdsinit</span>)</h2>
+        </div>
+        <span class="section-meta">ls -la &bull; cat &bull; cp &bull; calibre.skl</span>
+      </div>
+
+      <article class="subsection-card" aria-labelledby="card-2a-heading">
+        <div class="subsection-header">
+          <h3 id="card-2a-heading">2A. Audit Project Working Directory &amp; Verify SKILL File</h3>
+          <span class="sub-tag sub-tag-indigo">Pre-Flight Checks</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -la .cdsinit ~/.cdsinit</kbd>
+            </div>
+            <p class="cmd-desc">
+              Check both your project folder (e.g., <span class="inline-code">myProjects/.cdsinit</span>) and home directory (<span class="inline-code">~/.cdsinit</span>). <strong>Important:</strong> If a local <span class="inline-code">.cdsinit</span> exists in your launch folder, Virtuoso loads it and ignores <span class="inline-code">~/.cdsinit</span> unless explicitly chained.
+            </p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cat .cdsinit</kbd>
+            </div>
+            <p class="cmd-desc">
+              Inspect existing tool configurations (such as Cadence EMX <span class="inline-code">emxconfig.il</span> and PDK stackup variables) so you append Calibre without overwriting existing setups.
+            </p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">cp .cdsinit .cdsinit.bak</kbd>
+            </div>
+            <p class="cmd-desc">Create a clean backup of your working <span class="inline-code">.cdsinit</span> file before appending new SKILL code.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">ls -l $CALIBRE_HOME/shared/pkgs/icv/tools/queryskl/calibre.skl</kbd>
+            </div>
+            <p class="cmd-desc">Verify that the Calibre Virtuoso SKILL interface file exists and is readable at the standard <span class="inline-code">queryskl</span> path.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 03: LINK CALIBRE SKILL INTERFACE TO VIRTUOSO (C-SHELL SAFE)
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-link-heading">
+      <div class="section-banner accent-emerald">
+        <div class="section-title-group">
+          <span class="section-num">03</span>
+          <h2 id="sec-link-heading">Link Calibre SKILL Interface to Virtuoso (C-Shell Safe)</h2>
+        </div>
+        <span class="section-meta">.cdsinit &bull; calibre.skl &bull; csh echo</span>
+      </div>
+
+      <!-- Card 3A: Single-Line Echo Method for C-Shell -->
+      <article class="subsection-card" aria-labelledby="card-3a-heading">
+        <div class="subsection-header">
+          <h3 id="card-3a-heading">3A. Append Calibre Loader via Single-Line <span class="inline-code">echo</span> Commands</h3>
+          <span class="sub-tag sub-tag-emerald">Recommended for csh / tcsh</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item cmd-wide">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">echo "" &gt;&gt; .cdsinit</kbd>
+              <kbd class="cmd-badge">echo '; Load Calibre Virtuoso Interface' &gt;&gt; .cdsinit</kbd>
+              <kbd class="cmd-badge">echo 'let((s) s = strcat(getShellEnvVar("CALIBRE_HOME") "/shared/pkgs/icv/tools/queryskl/calibre.skl") when(isFile(s) load(s)))' &gt;&gt; .cdsinit</kbd>
+            </div>
+            <p class="cmd-desc">
+              <strong>Why single-line <span class="inline-code">echo</span>?</strong> Interactive C-Shell (<span class="inline-code">csh</span>/<span class="inline-code">tcsh</span>) handles multi-line <span class="inline-code">cat &lt;&lt; 'EOF'</span> pastes differently than Bash and often stalls at a <span class="inline-code">?</span> prompt without writing to disk. Always use double <span class="inline-code">&gt;&gt;</span> (append) rather than single <span class="inline-code">&gt;</span> (overwrite).
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3B: Complete Resulting .cdsinit & Multi-Line Alternative -->
+      <article class="subsection-card" aria-labelledby="card-3b-heading">
+        <div class="subsection-header">
+          <h3 id="card-3b-heading">3B. Verified <span class="inline-code">.cdsinit</span> Structure &amp; Editor Alternative</h3>
+          <span class="sub-tag sub-tag-emerald">EMX + Calibre Coexistence</span>
+        </div>
+
+        <div class="license-groups">
+          <div class="license-block">
+            <div class="license-block-header">
+              <span class="license-block-title">Resulting Project .cdsinit (EMX + Calibre)</span>
+              <span class="shell-pill emerald">cat .cdsinit</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <div class="snippet-code"><pre><span class="cmt">; Load Cadence EMX Virtuoso Interface</span>
+<span class="var">load</span>(<span class="val">"/cad/cadence/EMX/EMX_25.10.000/share/emx/virtuoso_ui/emxinterface/emxskill/emxconfig.il"</span>)
+
+<span class="cmt">; Default gpdk045 Process Stackup File</span>
+EMX_process_name = <span class="val">"/home/samanM/RFIC_design/mPDK/gpdk045_v_6_0/vsrf/Model_Data/gpdk045_proc/gpdk045_nominal.proc"</span>
+
+<span class="cmt">; Load Calibre Virtuoso Interface</span>
+<span class="var">let</span>((s) s = <span class="var">strcat</span>(<span class="var">getShellEnvVar</span>(<span class="val">"CALIBRE_HOME"</span>) <span class="val">"/shared/pkgs/icv/tools/queryskl/calibre.skl"</span>) <span class="var">when</span>(<span class="var">isFile</span>(s) <span class="var">load</span>(s)))</pre></div>
+                <span class="snippet-note">Confirm with <span class="inline-code">cat .cdsinit</span> that both EMX and Calibre entries are present.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="license-block">
+            <div class="license-block-header">
+              <span class="license-block-title">Verbose SKILL Block (If Editing via vi / gedit)</span>
+              <span class="shell-pill indigo">SKILL .cdsinit</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <div class="snippet-code"><pre><span class="cmt">; Load Calibre Virtuoso Interface with Diagnostics</span>
+<span class="var">let</span>( (calibreHome skillPath)
+    calibreHome = <span class="var">getShellEnvVar</span>(<span class="val">"CALIBRE_HOME"</span>)
+    <span class="var">if</span>( calibreHome <span class="var">then</span>
+        skillPath = <span class="var">strcat</span>(calibreHome <span class="val">"/shared/pkgs/icv/tools/queryskl/calibre.skl"</span>)
+        <span class="var">if</span>( <span class="var">isFile</span>(skillPath) <span class="var">then</span>
+            <span class="var">load</span>(skillPath)
+        <span class="var">else</span>
+            <span class="var">printf</span>(<span class="val">"WARNING: Calibre SKILL file not found at %s\n"</span> skillPath)
+        )
+    <span class="var">else</span>
+        <span class="var">printf</span>(<span class="val">"WARNING: CALIBRE_HOME is not set.\n"</span>)
+    )
+)</pre></div>
+                <span class="snippet-note">Prints explicit CIW diagnostics if <span class="inline-code">CALIBRE_HOME</span> or <span class="inline-code">calibre.skl</span> is ever moved.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 04: RESTART VIRTUOSO, VERIFY CIW & RUN CALIBRE
+         ======================================================================= -->
+    <section class="tool-section" aria-labelledby="sec-verify-heading">
+      <div class="section-banner accent-dual">
+        <div class="section-title-group">
+          <span class="section-num">04</span>
+          <h2 id="sec-verify-heading">Restart Virtuoso, Verify CIW &amp; Access Calibre Menus</h2>
+        </div>
+        <span class="section-meta">virtuoso &amp; &bull; CIW Log &bull; nmDRC / nmLVS / PEX</span>
+      </div>
+
+      <article class="subsection-card" aria-labelledby="card-4a-heading">
+        <div class="subsection-header">
+          <h3 id="card-4a-heading">4A. Launch Virtuoso &amp; Confirm Startup Log</h3>
+          <span class="sub-tag sub-tag-sky">Verification &amp; Usage</span>
+        </div>
+
+        <div class="cmd-grid">
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">virtuoso &amp;</kbd>
+            </div>
+            <p class="cmd-desc">Close any open Virtuoso session (<span class="inline-code">File &rarr; Exit</span> in the CIW), then relaunch from your project directory (<span class="inline-code">myProjects</span>) so the updated <span class="inline-code">.cdsinit</span> executes.</p>
+          </div>
+
+          <div class="cmd-item">
+            <div class="cmd-syntax-row">
+              <kbd class="cmd-badge">Layout / Schematic &rarr; <span class="arg">Calibre</span></kbd>
+            </div>
+            <p class="cmd-desc">Open any <strong>Layout</strong> or <strong>Schematic</strong> cellview from the Library Manager. A <strong>Calibre</strong> menu now appears in the top menu bar with <strong>Run nmDRC</strong>, <strong>Run nmLVS</strong>, <strong>Run PEX</strong>, and <strong>Start RVE</strong>.</p>
+          </div>
+        </div>
+
+        <div class="license-groups" style="margin-top: 1rem;">
+          <div class="license-block block-wide">
+            <div class="license-block-header">
+              <span class="license-block-title">Expected CIW (Command Interpreter Window) Confirmation Output</span>
+              <span class="shell-pill emerald">IC25.1 Startup Log</span>
+            </div>
+            <div class="snippet-list">
+              <div class="snippet-row">
+                <div class="snippet-code"><pre><span class="cmt">//</span>
+<span class="ok">//  Calibre Skill Interface * (v2026.1_35.25) *</span>
+<span class="cmt">//</span>
+<span class="cmt">//                         Copyright Siemens 1996-2020</span>
+<span class="cmt">//                             All Rights Reserved.</span>
+<span class="cmt">//</span></pre></div>
+                <span class="snippet-note">
+                  <strong>Note on <span class="inline-code">gpdk045</span> Rule Files:</strong> Cadence <span class="inline-code">gpdk045</span> ships with Assura/Pegasus rule decks by default. Before running DRC/LVS/PEX, check your PDK directory (e.g., <span class="inline-code">~/RFIC_design/mPDK/gpdk045_v_6_0/</span>) for lab-provided Calibre <span class="inline-code">.cal</span> or <span class="inline-code">.rules</span> decks.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer>
+    RFIC &amp; EDA Lab Hub &bull; Saman_RFCMOS GitHub
+  </footer>
+</body>
+</html>
